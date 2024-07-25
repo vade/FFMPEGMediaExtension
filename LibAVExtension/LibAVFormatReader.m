@@ -6,6 +6,7 @@
 //
 
 #import "LibAVFormatReader.h"
+#import "LibAVTrackReader.h"
 
 // Read callback
 int readPacket(void *opaque, uint8_t *buf, int buf_size)
@@ -118,7 +119,9 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 
 - (void)loadTrackReadersWithCompletionHandler:(nonnull void (^)(NSArray<id<METrackReader>> * _Nullable, NSError * _Nullable))completionHandler
 {
-    // iterate and create a
+    // iterate over our loaded tracks and create a LibAVTrackReader for each
+    
+    NSMutableArray<LibAVTrackReader*>* trackReaders = [NSMutableArray new];
     
     for (unsigned int i = 0; i < formatContext->nb_streams; i++) {
         AVStream *stream = formatContext->streams[i];
@@ -139,6 +142,8 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         }
         // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
     }
+    
+    completionHandler(trackReaders, nil);
     
 }
 

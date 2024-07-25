@@ -6,11 +6,24 @@
 //
 
 import SwiftUI
+import MediaToolbox
+import VideoToolbox
 
 @main
-struct LibAVExtensionHostApp: App {
-    var body: some Scene {
-        WindowGroup {
+struct LibAVExtensionHostApp: App
+{
+    init()
+    {
+        VTRegisterProfessionalVideoWorkflowVideoDecoders()
+        MTRegisterProfessionalVideoWorkflowFormatReaders()
+        
+        
+    }
+    
+    var body: some Scene
+    {
+        WindowGroup
+        {
             ContentView()
         }
     }
