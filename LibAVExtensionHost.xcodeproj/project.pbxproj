@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1BAC24702C52FEE80018E44F /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC246F2C52FEE80018E44F /* libavutil.a */; };
+		1BAC24732C52FF960018E44F /* libcorecrypto.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24712C52FF960018E44F /* libcorecrypto.tbd */; platformFilters = (macos, ); };
+		1BAC24742C52FF960018E44F /* libcommonCrypto.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24722C52FF960018E44F /* libcommonCrypto.tbd */; platformFilters = (macos, ); };
+		1BAC24782C52FFFC0018E44F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24772C52FFFC0018E44F /* libz.tbd */; };
+		1BAC247A2C5300380018E44F /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24792C5300380018E44F /* libbz2.tbd */; };
+		1BAC247C2C5300630018E44F /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC247B2C5300630018E44F /* libiconv.tbd */; };
 		1BACCBCF2C52AE1D0018E44F /* LibAVExtension.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 1BACCBC72C52AE1D0018E44F /* LibAVExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1BACCBD82C52B9940018E44F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1BACCBD72C52B9940018E44F /* README.md */; };
 		1BACCBDF2C52CFCA0018E44F /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBDE2C52CFB30018E44F /* libavcodec.a */; };
@@ -52,6 +58,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1BAC246F2C52FEE80018E44F /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavutil.a; sourceTree = "<group>"; };
+		1BAC24712C52FF960018E44F /* libcorecrypto.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcorecrypto.tbd; path = usr/lib/system/libcorecrypto.tbd; sourceTree = SDKROOT; };
+		1BAC24722C52FF960018E44F /* libcommonCrypto.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcommonCrypto.tbd; path = usr/lib/system/libcommonCrypto.tbd; sourceTree = SDKROOT; };
+		1BAC24752C52FFEC0018E44F /* libdz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libdz.tbd; path = usr/lib/libdz.tbd; sourceTree = SDKROOT; };
+		1BAC24772C52FFFC0018E44F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		1BAC24792C5300380018E44F /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
+		1BAC247B2C5300630018E44F /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		1BACCB952C52ACBE0018E44F /* LibAVExtensionHost.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LibAVExtensionHost.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BACCBA62C52ACBF0018E44F /* LibAVExtensionHostTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibAVExtensionHostTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BACCBB02C52ACBF0018E44F /* LibAVExtensionHostUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibAVExtensionHostUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -104,6 +117,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1BAC247C2C5300630018E44F /* libiconv.tbd in Frameworks */,
+				1BAC247A2C5300380018E44F /* libbz2.tbd in Frameworks */,
+				1BAC24782C52FFFC0018E44F /* libz.tbd in Frameworks */,
+				1BAC24732C52FF960018E44F /* libcorecrypto.tbd in Frameworks */,
+				1BAC24742C52FF960018E44F /* libcommonCrypto.tbd in Frameworks */,
+				1BAC24702C52FEE80018E44F /* libavutil.a in Frameworks */,
 				1BACCBDF2C52CFCA0018E44F /* libavcodec.a in Frameworks */,
 				1BACCBE12C52CFE40018E44F /* libavformat.a in Frameworks */,
 			);
@@ -139,8 +158,15 @@
 		1BACCBDB2C52CF650018E44F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1BAC247B2C5300630018E44F /* libiconv.tbd */,
+				1BAC24792C5300380018E44F /* libbz2.tbd */,
+				1BAC24772C52FFFC0018E44F /* libz.tbd */,
+				1BAC24752C52FFEC0018E44F /* libdz.tbd */,
+				1BAC24722C52FF960018E44F /* libcommonCrypto.tbd */,
+				1BAC24712C52FF960018E44F /* libcorecrypto.tbd */,
 				1BACCBE02C52CFDA0018E44F /* libavformat.a */,
 				1BACCBDE2C52CFB30018E44F /* libavcodec.a */,
+				1BAC246F2C52FEE80018E44F /* libavutil.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -263,6 +289,7 @@
 					};
 					1BACCBC62C52AE1D0018E44F = {
 						CreatedOnToolsVersion = 16.0;
+						LastSwiftMigration = 1600;
 					};
 				};
 			};
@@ -654,6 +681,7 @@
 		1BACCBD22C52AE1D0018E44F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LibAVExtension/LibAVExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -678,6 +706,8 @@
 					"$(PROJECT_DIR)/ffmpeg/libavcodec",
 					"$(PROJECT_DIR)/ffmpeg/libavformat",
 					"$(PROJECT_DIR)/ffmpeg/libavutil",
+					"$(PROJECT_DIR)",
+					"$(SDKROOT)/usr/lib/system",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
@@ -687,6 +717,8 @@
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/LibAVExtension/";
+				SWIFT_OBJC_BRIDGING_HEADER = "LibAVExtension/LibAVExtension-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -694,6 +726,7 @@
 		1BACCBD32C52AE1D0018E44F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = LibAVExtension/LibAVExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -718,6 +751,8 @@
 					"$(PROJECT_DIR)/ffmpeg/libavcodec",
 					"$(PROJECT_DIR)/ffmpeg/libavformat",
 					"$(PROJECT_DIR)/ffmpeg/libavutil",
+					"$(PROJECT_DIR)",
+					"$(SDKROOT)/usr/lib/system",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
@@ -727,6 +762,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/LibAVExtension/";
+				SWIFT_OBJC_BRIDGING_HEADER = "LibAVExtension/LibAVExtension-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;

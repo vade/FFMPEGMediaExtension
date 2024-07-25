@@ -7,9 +7,12 @@
 
 module FFMPEG [extern_c] {
     header "../ffmpeg/libavformat/avformat.h"
+    link "../ffmpeg/libavformat/libavformat.a"
+
     header "../ffmpeg/libavcodec/avcodec.h"
-    link "libavcodec.a"
-    link "libavformat.a"
+    link "../ffmpeg/libavcodec/libavcodec.a"
+
+    link "../ffmpeg/libavutil/libavutil.a"
 
     export *
 }
