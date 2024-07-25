@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MediaExtension
 
 struct ContentView: View {
     var body: some View {
