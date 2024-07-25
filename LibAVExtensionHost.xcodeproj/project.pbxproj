@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		1BACCBCF2C52AE1D0018E44F /* LibAVExtension.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 1BACCBC72C52AE1D0018E44F /* LibAVExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1BACCBD82C52B9940018E44F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1BACCBD72C52B9940018E44F /* README.md */; };
+		1BACCBDF2C52CFCA0018E44F /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBDE2C52CFB30018E44F /* libavcodec.a */; };
+		1BACCBE12C52CFE40018E44F /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBE02C52CFDA0018E44F /* libavformat.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +57,8 @@
 		1BACCBB02C52ACBF0018E44F /* LibAVExtensionHostUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibAVExtensionHostUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BACCBC72C52AE1D0018E44F /* LibAVExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = LibAVExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BACCBD72C52B9940018E44F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		1BACCBDE2C52CFB30018E44F /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ffmpeg/libavcodec/libavcodec.a; sourceTree = "<group>"; };
+		1BACCBE02C52CFDA0018E44F /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ffmpeg/libavformat/libavformat.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -100,6 +104,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1BACCBDF2C52CFCA0018E44F /* libavcodec.a in Frameworks */,
+				1BACCBE12C52CFE40018E44F /* libavformat.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -115,6 +121,7 @@
 				1BACCBB32C52ACBF0018E44F /* LibAVExtensionHostUITests */,
 				1BACCBC82C52AE1D0018E44F /* LibAVExtension */,
 				1BACCB962C52ACBE0018E44F /* Products */,
+				1BACCBDB2C52CF650018E44F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -127,6 +134,15 @@
 				1BACCBC72C52AE1D0018E44F /* LibAVExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1BACCBDB2C52CF650018E44F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1BACCBE02C52CFDA0018E44F /* libavformat.a */,
+				1BACCBDE2C52CFB30018E44F /* libavcodec.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -644,6 +660,11 @@
 				DEVELOPMENT_TEAM = SHG3AW6YV7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ffmpeg",
+					"$(SRCROOT)/ffmpeg/libavcodec",
+					"$(SRCROOT)/ffmpeg/libavformat",
+				);
 				INFOPLIST_FILE = LibAVExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LibAVExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -651,6 +672,11 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ffmpeg/libavcodec",
+					"$(PROJECT_DIR)/ffmpeg/libavformat",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
@@ -672,6 +698,11 @@
 				DEVELOPMENT_TEAM = SHG3AW6YV7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ffmpeg",
+					"$(SRCROOT)/ffmpeg/libavcodec",
+					"$(SRCROOT)/ffmpeg/libavformat",
+				);
 				INFOPLIST_FILE = LibAVExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LibAVExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -679,6 +710,11 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ffmpeg/libavcodec",
+					"$(PROJECT_DIR)/ffmpeg/libavformat",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;

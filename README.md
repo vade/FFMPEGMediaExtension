@@ -4,11 +4,15 @@ This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theo
 
 Since MediaExtensions are shipped in a host app, this has a stupid Host app.
 
-Requirements
+## Requirements:
+
 * MacOS 15 Beta 4 + 
 * XCode 16 Beta 4 + 
 
-To build FFMPEG libAVFormat and libAVCodec:
+
+## Building:
+
+If you want to build FFMPEG libAVFormat and libAVCodec:
 
 `brew install automake nasm pkg-config`
 
@@ -21,8 +25,7 @@ FFMPEG is installed as a submodule - so ensure you git checkout the submodule an
 
 `make -j$(sysctl -n hw.ncpu)`
 
-This will build you the statically linked libAVFormat.a and libAVCodec.a libr
-
+This will build you the statically linked libAVFormat.a and libAVCodec.a libries 
 
 Todo:
 
