@@ -7,7 +7,6 @@
 
 import Foundation
 import ExtensionFoundation
-import MediaExtension
 
 /// The AppExtensionConfiguration that will be provided by this extension.
 /// This is typically defined by the extension host in a framework.

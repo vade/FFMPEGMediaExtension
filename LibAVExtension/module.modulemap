@@ -1,0 +1,15 @@
+//
+//  FFMPEG.modulemap
+//  LibAVExtension
+//
+//  Created by Anton Marini on 7/25/24.
+//
+
+module FFMPEG [extern_c] {
+    header "../ffmpeg/libavformat/avformat.h"
+    header "../ffmpeg/libavcodec/avcodec.h"
+    link "libavcodec.a"
+    link "libavformat.a"
+
+    export *
+}
