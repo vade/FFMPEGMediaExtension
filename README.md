@@ -1,4 +1,4 @@
-#  <#Title#>
+# FFMPEGMediaExtension
 
 This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theory would allow for native AVFOundation container parsing and decode.
 
@@ -8,7 +8,6 @@ Since MediaExtensions are shipped in a host app, this has a stupid Host app.
 
 * MacOS 15 Beta 4 + 
 * XCode 16 Beta 4 + 
-
 
 ## Building:
 
@@ -31,9 +30,10 @@ This will build you the statically linked libAVFormat.a and libAVCodec.a libries
 
 * [x] libavformat / libavcodec, libavutil compiled as a .a
 * [x] ffmpeg headers inlcuded
+* [ ] Swift Modulemap + Obj-C libav*
 * [ ] Implement necessary Media Extension protocols
     * [x] MEFormatReaderExtension
-    * [-] MEFormatReader
+    * [ ] MEFormatReader
     * [ ] METrackReader
     * [ ] METrackInfo
     * [ ] MESampleCursor
@@ -47,8 +47,7 @@ This will build you the statically linked libAVFormat.a and libAVCodec.a libries
 
 Leverage AVIOContext to allow a MEByteSource to driven by a AVFormatContext to get us container parsing and metadata
 
-
 ## Running Notes:
 
 * Weirdly MediaExtension headers imply macOS 14 supported?
-*  entitlements for Media Extensions
+* entitlements for Media Extensions

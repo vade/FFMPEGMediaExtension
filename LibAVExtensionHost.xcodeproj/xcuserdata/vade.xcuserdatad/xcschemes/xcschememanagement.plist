@@ -7,7 +7,7 @@
 		<key>LibAVExtension.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>0</integer>
+			<integer>1</integer>
 		</dict>
 		<key>LibAVExtensionHost.xcscheme_^#shared#^_</key>
 		<dict>
