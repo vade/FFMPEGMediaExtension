@@ -30,10 +30,10 @@ This will build you the statically linked libAVFormat.a and libAVCodec.a libries
 
 * [x] libavformat / libavcodec, libavutil compiled as a .a
 * [x] ffmpeg headers inlcuded
-* [ ] Swift Modulemap + Obj-C libav*
+* [x] Swift Modulemap + Obj-C libav*
 * [ ] Implement necessary Media Extension protocols
     * [x] MEFormatReaderExtension
-    * [ ] MEFormatReader
+    * [x] MEFormatReader (partial)
     * [ ] METrackReader
     * [ ] METrackInfo
     * [ ] MESampleCursor
