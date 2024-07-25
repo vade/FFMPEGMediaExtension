@@ -27,14 +27,28 @@ FFMPEG is installed as a submodule - so ensure you git checkout the submodule an
 
 This will build you the statically linked libAVFormat.a and libAVCodec.a libries 
 
-Todo:
+## Todo:
 
-* [ ] LibAVCodec compiled as a .a
-* [ ] LibAV headers inlcuded
-* [ ] Implement necessary MediaExtnsion Shims
+* [x] libavformat / libavcodec, libavutil compiled as a .a
+* [x] ffmpeg headers inlcuded
+* [ ] Implement necessary Media Extension protocols
+    * [x] MEFormatReaderExtension
+    * [-] MEFormatReader
+    * [ ] METrackReader
+    * [ ] METrackInfo
+    * [ ] MESampleCursor
+    * [ ] MEVideoDecoderExtension
+    * [ ] MEVideoDecoder
+    * [ ] MEVideoDecoderPixelBufferManager
+* [ ] impelment Extension requirements (plists, entitlements, etc)
 
 
-Running Notes:
+## Strategy
+
+Leverage AVIOContext to allow a MEByteSource to driven by a AVFormatContext to get us container parsing and metadata
+
+
+## Running Notes:
 
 * Weirdly MediaExtension headers imply macOS 14 supported?
 *  entitlements for Media Extensions
