@@ -11,7 +11,44 @@
 	<key>EXAppExtensionAttributes</key>
 	<dict>
 		<key>EXExtensionPointIdentifier</key>
-		<string>com.example.example-extension</string>
+		<string>com.apple.mediaextension.formatreader</string>
+		<key>ClassImplementationID</key>
+		<string>info.vade.LibAVExtension.formatreader</string>
+		<key>EXPrincipalClass</key>
+		<string>LibAVFormatReaderFactory</string>
+		<key>ObjectName</key>
+		<string>This Media Extension provides support for FFMPEG based formts and codecs</string>
+		<key>MTFileNameExtensionArray</key>
+		<array>
+			<string>mkv</string>
+			<string>wmv</string>
+			<string>avi</string>
+		</array>
+		<key>MTUTTypeArray</key>
+		<array>
+			<dict>
+				<key>UTTypeIdentifier</key>
+				<string>org.matroska.mkv</string>
+				<key>UTTypeDescription</key>
+				<string>Matroska Video</string>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.movie</string>
+					<string>public.audiovisual-content</string>
+				</array>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>mkv</string>
+					</array>
+					<key>public.mime-type</key>
+					<array>
+						<string>video/x-matroska</string>
+					</array>
+				</dict>
+			</dict>
+		</array>
 	</dict>
 </dict>
 </plist>
