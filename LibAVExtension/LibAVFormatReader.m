@@ -71,7 +71,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     {
         NSLog(@"Initiaizing LibAVFormatReader");
         self.byteSource = byteSource;
-        self.completionQueue = dispatch_queue_create("info.vade.LibAVExtension.completionQueue", DISPATCH_QUEUE_SERIAL);
+        self.completionQueue = dispatch_queue_create("info.vade.LibAVExtension.formatCompletionQueue", DISPATCH_QUEUE_SERIAL);
         self.currentReadOffset = 0;
     }
     
@@ -157,7 +157,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         for (unsigned int i = 0; i < strongSelf->format_ctx->nb_streams; i++) {
             AVStream *stream = strongSelf->format_ctx->streams[i];
            
-            LibAVTrackReader* trackReader = [[LibAVTrackReader alloc] initWithStream:stream];
+            LibAVTrackReader* trackReader = [[LibAVTrackReader alloc] initWithFormatReader:self stream:stream atIndex:i];
             // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
             
             [trackReaders addObject:trackReader];

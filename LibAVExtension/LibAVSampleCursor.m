@@ -7,15 +7,18 @@
 
 #import "LibAVSampleCursor.h"
 
+@interface LibAVSampleCursor ()
+@property (readwrite, strong) LibAVTrackReader* trackReader;
+
+@property (nonatomic, readwrite) CMTime presentationTimeStamp;
+@property (nonatomic, readwrite) CMTime decodeTimeStamp;
+@property (nonatomic, readwrite) CMTime currentSampleDuration;
+@property (nonatomic, readwrite, nullable) __attribute__((NSObject)) CMFormatDescriptionRef currentSampleFormatDescription;
+
+@end
+
 @implementation LibAVSampleCursor
 
-@synthesize currentSampleFormatDescription;
-
-@synthesize presentationTimeStamp;
-
-@synthesize decodeTimeStamp;
-
-@synthesize currentSampleDuration;
 
 //- (nonnull id)copyWithZone:(nullable NSZone *)zone {
 //    
@@ -42,6 +45,7 @@
 {
     
 }
+
 
 
 

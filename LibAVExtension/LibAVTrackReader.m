@@ -6,17 +6,26 @@
 //
 
 #import "LibAVTrackReader.h"
+#import "LibAVFormatReader.h"
 #import <CoreMedia/CoreMedia.h>
+
+@interface LibAVTrackReader ()
+@property (readwrite, strong) LibAVFormatReader* formatReader;
+@property (readwrite, assign) NSUInteger streamIndex;
+@end
 
 @implementation LibAVTrackReader
 
-- (instancetype) initWithStream:(AVStream*)stream
+- (instancetype) initWithFormatReader:(LibAVFormatReader*)formatReader stream:(AVStream*)stream atIndex:(NSUInteger)index;
 {
     self = [super init];
     if (self != nil)
     {
-        // Todo - do I need to mem copy this or some shit?
+        self.formatReader = formatReader;
+        self.streamIndex = index;
+
         self->stream = stream;
+
     }
     return self;
 }
@@ -39,14 +48,22 @@
     
     CMFormatDescriptionRef format = [self formatDescription];
     
-    NSArray* formats = @[(id)CFBridgingRelease(format)];
+    if (format != NULL)
+    {
+        NSArray* formats = @[(id)CFBridgingRelease(format)];
+        
+        METrackInfo* trackInfo = [[METrackInfo alloc] initWithMediaType:[self streamMediaType]
+                                                                trackID:(CMPersistentTrackID)self->stream->index
+                                                     formatDescriptions:formats];
+        
+        // TODO: How to know if a stream is enabled?
+        // trackInfo.enabled = ??
+        
+        // do this in place
+        completionHandler(trackInfo, nil);
+    }
     
-    METrackInfo* trackInfo = [[METrackInfo alloc] initWithMediaType:[self streamMediaType]
-                                                            trackID:(CMPersistentTrackID)self->stream->index
-                                                 formatDescriptions:formats];
     
-    // do this in place
-    completionHandler(trackInfo, nil);
     
 }
 
