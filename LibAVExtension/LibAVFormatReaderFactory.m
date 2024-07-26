@@ -14,6 +14,8 @@
                                                     options:(MEFormatReaderInstantiationOptions * _Nullable)options
                                                       error:(NSError *__autoreleasing  _Nullable * _Nullable)error
 {
+    
+    NSLog(@"Creating LibAVFormatReader for %@", primaryByteSource.fileName);
     return [[LibAVFormatReader alloc] initWithByteSource:primaryByteSource];
 }
 

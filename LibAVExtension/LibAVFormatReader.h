@@ -12,6 +12,8 @@
 #import <libavformat/avio.h>
 #import <libavutil/file.h>
 
+#import <dispatch/dispatch.h>
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface LibAVFormatReader : NSObject <MEFormatReader>
@@ -23,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
     AVIOContext *avio_ctx;
     uint8_t *avio_ctx_buffer;    
 }
-
+@property (readwrite, retain) dispatch_queue_t completionQueue;
 @property (readwrite, retain) MEByteSource* byteSource;
 
 - (instancetype) initWithByteSource:(MEByteSource*)byteSource;

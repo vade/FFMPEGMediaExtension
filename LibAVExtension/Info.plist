@@ -54,13 +54,19 @@
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>com.apple.mediaextension-content</string>
+				<string>org.matroska.mkv</string>
 			</array>
 			<key>UTTypeDescription</key>
 			<string>This Media Extension provides support for FFMPEG based formts and codecs</string>
 			<key>UTTypeIdentifier</key>
 			<string>org.matroska.mkv</string>
 			<key>UTTypeTagSpecification</key>
-			<dict/>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>mkv</string>
+				</array>
+			</dict>
 		</dict>
 	</array>
 </dict>

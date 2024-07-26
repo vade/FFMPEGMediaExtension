@@ -67,21 +67,12 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     self = [super init];
     if (self != nil)
     {
+        NSLog(@"Initiaizing LibAVFormatReader");
         self.byteSource = byteSource;
         
-        avio_ctx_buffer = av_malloc(4096);
-
-        // Pass self so we have a callback to our Obj-C objects properties
-        avio_ctx = avio_alloc_context(avio_ctx_buffer, 4096, 0, (__bridge void *)(self), readPacket, NULL, seek);
+        self.completionQueue = dispatch_queue_create("info.vade.LibAVExtension.completionQueue", DISPATCH_QUEUE_SERIAL);
         
-        formatContext = avformat_alloc_context();
         
-        formatContext->pb = avio_ctx;
-        
-        if (avformat_open_input(&formatContext, NULL, NULL, NULL) < 0)
-        {
-            // Handle error
-        }
     }
     
     return self;
@@ -102,23 +93,55 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 
 - (void)loadFileInfoWithCompletionHandler:(void (^)(MEFileInfo* _Nullable fileInfo, NSError * _Nullable error))completionHandler
 {
-    MEFileInfo* fileInfo = [[MEFileInfo alloc] init];
     
-    avformat_find_stream_info(self->formatContext, NULL);
-    
-    fileInfo.duration = CMTimeMake(self->formatContext->duration, AV_TIME_BASE);
-    fileInfo.fragmentsStatus = MEFileInfoCouldNotContainFragments;
-    
-    completionHandler(fileInfo, nil);
+    LibAVFormatReader* __weak weakSelf = self;
+
+    dispatch_async(self.completionQueue, ^{
+        
+        LibAVFormatReader* strongSelf = weakSelf;
+
+        NSLog(@"loadFileInfoWithCompletionHandler");
+        MEFileInfo* fileInfo = [[MEFileInfo alloc] init];
+        
+        strongSelf->avio_ctx_buffer = av_malloc(4096);
+
+        // Pass self so we have a callback to our Obj-C objects properties
+        strongSelf->avio_ctx = avio_alloc_context(strongSelf->avio_ctx_buffer, 4096, 0, (__bridge void *)(strongSelf), readPacket, NULL, seek);
+        
+        strongSelf->formatContext = avformat_alloc_context();
+        
+        strongSelf->formatContext->pb = strongSelf->avio_ctx;
+        
+        if (avformat_open_input(&(strongSelf->formatContext), NULL, NULL, NULL) < 0)
+        {
+            // Handle error
+        }
+        
+        avformat_find_stream_info(self->formatContext, NULL);
+        
+        fileInfo.duration = CMTimeMakeWithSeconds(400,600);// CMTimeMake(self->formatContext->duration, AV_TIME_BASE);
+        fileInfo.fragmentsStatus = MEFileInfoCouldNotContainFragments;
+        
+        completionHandler(fileInfo, nil);
+    });
 }
 
 - (void)loadMetadataWithCompletionHandler:(void (^)(NSArray< AVMetadataItem * > * _Nullable metadata, NSError * _Nullable error))completionHandler
 {
-    
+    dispatch_async(self.completionQueue, ^{
+        
+        NSLog(@"loadMetadataWithCompletionHandler");
+
+        completionHandler(nil, nil);
+    });
 }
 
 - (void)loadTrackReadersWithCompletionHandler:(nonnull void (^)(NSArray<id<METrackReader>> * _Nullable, NSError * _Nullable))completionHandler
 {
+    dispatch_async(self.completionQueue, ^{
+
+        NSLog(@"loadTrackReadersWithCompletionHandler");
+
     // iterate over our loaded tracks and create a LibAVTrackReader for each
     
     NSMutableArray<LibAVTrackReader*>* trackReaders = [NSMutableArray new];
@@ -143,7 +166,8 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
     }
     
-    completionHandler(trackReaders, nil);
+        completionHandler(trackReaders, nil);
+    });
     
 }
 
