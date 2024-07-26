@@ -45,6 +45,27 @@ This will build you the statically linked libAVFormat.a and libAVCodec.a libries
 
 ## Strategy
 
+We Eventually require 2 Bundle targets that are Media Extensions.
+
+* A Media Extention that implements `MEFormatReader`, which will allow container parsing via `libavformat` and provide container metadata, track metadata, and compressed sample metadata. 
+
+* A Media Extension that impelments `MEVideoDecoder` - a Video Decompressor which will allow for codec decompression via `libavcodec` and provide pixel buffers from appropriate samples. 
+
+
+FFMPEGs library more or less follows similar design patterns to AVFoundation. The following isnt totally accurate, but more or less gets the point across:
+
+* `CMTime` <~> `AVRational` 
+* `CMMediaType` <~> `AVMediaType`
+* `CMFormatDescription` <~> `AVCodecParameters`
+* `CMSampleBuffer` <~> `AVPacket`
+* `CVPixelBuffer` <-> `AVFrame` (decoded video)
+
+* `AVAsset` <~> `AVFormatContext`
+* `AVAssetTrack` <~> `AVStream`
+* `AVSampleCursor` <~> `AVIOContext` 
+
+
+
 Leverage AVIOContext to allow a MEByteSource to driven by a AVFormatContext to get us container parsing and metadata
 
 ## Running Notes:
