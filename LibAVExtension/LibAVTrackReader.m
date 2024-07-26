@@ -132,7 +132,6 @@
 
 - (nullable CMFormatDescriptionRef) audioFormatDescription
 {
-    
     CMAudioFormatDescriptionRef audioFormatDescription = NULL;
     
     AudioFormatID audioFormatID = (AudioFormatID)self->stream->codecpar->codec_tag;
@@ -142,18 +141,81 @@
     asbd.mChannelsPerFrame = self->stream->codecpar->ch_layout.nb_channels;
     asbd.mFormatID = audioFormatID;
 
+    //Calculate layout size
+    UInt32 layoutSize = offsetof(AudioChannelLayout, mChannelDescriptions[0]) + (self->stream->codecpar->ch_layout.nb_channels * sizeof(AudioChannelDescription));
+    AudioChannelLayout *channelLayout = (AudioChannelLayout *)malloc(layoutSize);
+    memset(channelLayout, 0, layoutSize);
+    channelLayout->mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
+    channelLayout->mNumberChannelDescriptions = self->stream->codecpar->ch_layout.nb_channels;
+    
+    // Set the channel descriptions based on the mask or map
+    for (int i = 0; i < self->stream->codecpar->ch_layout.nb_channels; i++)
+    {
+        // Assume that the mask is used; handle custom maps if necessary
+        uint64_t mask = self->stream->codecpar->ch_layout.u.mask;
+        // Translate the mask bit to the appropriate Core Audio channel label
+        // This is a simplified example; actual mapping requires matching specific bit positions
+        if (mask & AV_CH_FRONT_LEFT)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_Left;
+        }
+        else if (mask * AV_CH_FRONT_RIGHT)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_Right;
+        }
+        else if (mask * AV_CH_FRONT_CENTER)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_Center;
+        }
+        else if (mask * AV_CH_LOW_FREQUENCY)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_LFEScreen;
+        }
+        else if (mask * AV_CH_BACK_LEFT)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_LeftBackSurround;
+        }
+        else if (mask * AV_CH_BACK_RIGHT)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_RightBackSurround;
+        }
+        else if (mask * AV_CH_FRONT_LEFT_OF_CENTER)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_LeftCenter;
+        }
+        else if (mask * AV_CH_FRONT_RIGHT_OF_CENTER)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_RightCenter;
+        }
+        else if (mask * AV_CH_BACK_CENTER)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_CenterSurround;
+        }
+        else if (mask * AV_CH_SIDE_LEFT)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_LeftSurroundDirect;
+        }
+        else if (mask * AV_CH_SIDE_RIGHT)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_RightSurroundDirect;
+        }
+        else if (mask * AV_CH_TOP_CENTER)
+        {
+            channelLayout->mChannelDescriptions[i].mChannelLabel = kAudioChannelLabel_TopCenterSurround;
+        }
+
+        // Handle other channels similarly...
+    }
     
     // Create audio format description
-    OSStatus status = CMAudioFormatDescriptionCreate(
-                                                     kCFAllocatorDefault,
+    OSStatus status = CMAudioFormatDescriptionCreate(kCFAllocatorDefault,
                                                      &asbd,
-                                                     0,       // Layout size (0 if no layout)
-                                                     NULL,    // Layout (NULL if no layout)
+                                                     layoutSize,
+                                                     channelLayout,
                                                      0,       // Magic cookie size
                                                      NULL,    // Magic cookie
                                                      NULL,    // Extensions
-                                                     &audioFormatDescription
-                                                     );
+                                                     &audioFormatDescription);
     
     if (status != noErr) {
         // Handle error
