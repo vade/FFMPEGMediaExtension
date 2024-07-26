@@ -22,13 +22,14 @@ NS_ASSUME_NONNULL_BEGIN
 @interface LibAVTrackReader : NSObject <METrackReader>
 {
     // Unowned reference - owned by formatReader
-    AVStream* stream;
+    @public AVStream* stream;
 }
 
 @property (readonly, strong) LibAVFormatReader* formatReader;
 @property (readonly, assign) NSUInteger streamIndex;
 
 - (instancetype) initWithFormatReader:(LibAVFormatReader*)formatReader stream:(AVStream*)stream atIndex:(NSUInteger)index;
+- (nullable CMFormatDescriptionRef) formatDescription;
 
 @end
 

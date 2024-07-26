@@ -6,11 +6,16 @@
 //
 
 import SwiftUI
-import MediaExtension
+import AVKit
 
 struct ContentView: View {
+    let asset:AVAsset
+    
     var body: some View {
         VStack {
+            
+            VideoPlayer(player: AVPlayer(playerItem: AVPlayerItem(asset: self.asset)))
+            
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
@@ -21,5 +26,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(asset: AVURLAsset(url: URL(filePath: "/Users/vade/SceneEditTest-Fixed-Frame-Numbers.m4v")))
 }

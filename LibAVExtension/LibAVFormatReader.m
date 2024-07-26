@@ -71,7 +71,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     {
         NSLog(@"Initiaizing LibAVFormatReader");
         self.byteSource = byteSource;
-        self.completionQueue = dispatch_queue_create("info.vade.LibAVExtension.formatCompletionQueue", DISPATCH_QUEUE_SERIAL);
+//        self.completionQueue = dispatch_queue_create("info.vade.LibAVExtension.formatCompletionQueue", DISPATCH_QUEUE_SERIAL);
         self.currentReadOffset = 0;
     }
     
@@ -94,11 +94,13 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 - (void)loadFileInfoWithCompletionHandler:(void (^)(MEFileInfo* _Nullable fileInfo, NSError * _Nullable error))completionHandler
 {
     
-    LibAVFormatReader* __weak weakSelf = self;
+//    LibAVFormatReader* __weak weakSelf = self;
+//
+//    dispatch_async(self.completionQueue, ^{
+//        
+//        LibAVFormatReader* strongSelf = weakSelf;
 
-    dispatch_async(self.completionQueue, ^{
-        
-        LibAVFormatReader* strongSelf = weakSelf;
+    LibAVFormatReader* strongSelf = self;
 
         NSLog(@"loadFileInfoWithCompletionHandler");
         MEFileInfo* fileInfo = [[MEFileInfo alloc] init];
@@ -128,26 +130,28 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         NSLog(@"loadFileInfoWithCompletionHandler got duration: %@", CMTimeCopyDescription(kCFAllocatorDefault, fileInfo.duration) );
 
         completionHandler(fileInfo, nil);
-    });
+//    });
 }
 
 - (void)loadMetadataWithCompletionHandler:(void (^)(NSArray< AVMetadataItem * > * _Nullable metadata, NSError * _Nullable error))completionHandler
 {
-    dispatch_async(self.completionQueue, ^{
+//    dispatch_async(self.completionQueue, ^{
         
         NSLog(@"loadMetadataWithCompletionHandler");
 
         completionHandler(nil, nil);
-    });
+//    });
 }
 
 - (void)loadTrackReadersWithCompletionHandler:(nonnull void (^)(NSArray<id<METrackReader>> * _Nullable, NSError * _Nullable))completionHandler
 {
-    LibAVFormatReader* __weak weakSelf = self;
+//    LibAVFormatReader* __weak weakSelf = self;
+//
+//    dispatch_async(self.completionQueue, ^{
+//        
+//        LibAVFormatReader* strongSelf = weakSelf;
 
-    dispatch_async(self.completionQueue, ^{
-        
-        LibAVFormatReader* strongSelf = weakSelf;
+    LibAVFormatReader* strongSelf = self;
 
         NSLog(@"loadTrackReadersWithCompletionHandler");
 
@@ -164,7 +168,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         }
     
         completionHandler(trackReaders, nil);
-    });
+//    });
     
 }
 

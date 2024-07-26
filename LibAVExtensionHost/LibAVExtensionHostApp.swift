@@ -13,16 +13,17 @@ import AVFoundation
 @main
 struct LibAVExtensionHostApp: App
 {
+    let asset: AVAsset
     init()
     {
         VTRegisterProfessionalVideoWorkflowVideoDecoders()
         MTRegisterProfessionalVideoWorkflowFormatReaders()
         
-        let url = URL(filePath: "/Users/vade/Downloads/Everything.Everywhere.All.At.Once.2022.1080p.WEB-DL.DDP5.1.H.264-EVO/Everything.Everywhere.All.At.Once.2022.1080p.WEB-DL.DDP5.1.H.264-EVO.mkv")
+        let url = URL(filePath: "/Users/vade/Downloads/RuPauls.Drag.Race.All.Stars.Untucked.S07E11.720p.WEB.h264-KOGi/Sample/rupauls.drag.race.all.stars.untucked.s07e11.720p.web.h264-kogi.sample.mkv")
         
-        let asset = AVURLAsset(url: url)
+        self.asset = AVURLAsset(url: url)
         
-        print(asset.duration)
+        print(self.asset.duration)
         
     }
     
@@ -30,7 +31,7 @@ struct LibAVExtensionHostApp: App
     {
         WindowGroup
         {
-            ContentView()
+            ContentView(asset: self.asset)
         }
     }
 }

@@ -7,6 +7,7 @@
 
 #import "LibAVTrackReader.h"
 #import "LibAVFormatReader.h"
+#import "LibAVSampleCursor.h"
 #import <CoreMedia/CoreMedia.h>
 
 @interface LibAVTrackReader ()
@@ -33,14 +34,27 @@
 
 - (void)generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler {
     
+    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
+    
+    completionHandler(sampleCursor, nil);
 }
 
 - (void)generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler { 
     
+    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
+    
+    completionHandler(sampleCursor, nil);
+
 }
 
 - (void)generateSampleCursorAtPresentationTimeStamp:(CMTime)presentationTimeStamp completionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler { 
     
+    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
+    
+//    sampleCursor.presentationTimeStamp = presentationTimeStamp;
+    
+    completionHandler(sampleCursor, nil);
+
 }
 
 
@@ -52,8 +66,11 @@
     {
         NSArray* formats = @[(id)CFBridgingRelease(format)];
         
+        // This is lame as fuck - we dont have zero based indexes!
+        // kCMPersistentTrackID_Invalid = 0 !
+        
         METrackInfo* trackInfo = [[METrackInfo alloc] initWithMediaType:[self streamMediaType]
-                                                                trackID:(CMPersistentTrackID)self->stream->index
+                                                                trackID:(CMPersistentTrackID)self->stream->index + 1
                                                      formatDescriptions:formats];
         
         // TODO: How to know if a stream is enabled?
@@ -71,8 +88,6 @@
 
 - (CMMediaType) streamMediaType
 {
-    CMMediaType type;
-    
     switch (self->stream->codecpar->codec_type)
     {
         case AVMEDIA_TYPE_UNKNOWN:
@@ -108,8 +123,9 @@
             return [self videoFormatDescription];
 
         case AVMEDIA_TYPE_AUDIO:
-            return [self audioFormatDescription];
-
+//            return [self audioFormatDescription];
+            return NULL;
+            
         case AVMEDIA_TYPE_DATA:
             return NULL;
 
@@ -124,11 +140,31 @@
     }
 }
 
+// BARF
+- (CMVideoCodecType) videoCodecTypeFromCodecID
+{
+    switch (self->stream->codecpar->codec_id)
+    {
+        case AV_CODEC_ID_H264:
+            return kCMVideoCodecType_H264;
+            
+        default:
+            return -1;
+    }
+}
+
 - (nullable CMFormatDescriptionRef) videoFormatDescription
 {
     CMFormatDescriptionRef formatDescription = NULL;
 
     CMVideoCodecType codecType = (CMVideoCodecType) self->stream->codecpar->codec_tag;
+
+    if (codecType == 0)
+    {
+        codecType = [self videoCodecTypeFromCodecID];
+    }
+    
+    NSLog(@"Found Codec Type: %i", codecType);
 
     // Create video format description
     OSStatus status = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
@@ -143,6 +179,8 @@
         // Handle error
         return NULL;
     }
+    
+    NSLog(@"Made Format Description: %@", formatDescription);
     
     return formatDescription;
 }

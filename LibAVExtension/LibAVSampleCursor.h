@@ -21,6 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) CMTime currentSampleDuration;
 @property (nonatomic, readonly, nullable) __attribute__((NSObject)) CMFormatDescriptionRef currentSampleFormatDescription;
 
+- (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader;
+
 @end
 
 NS_ASSUME_NONNULL_END

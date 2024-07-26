@@ -19,7 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface LibAVFormatReader : NSObject <MEFormatReader>
 {
-    AVFormatContext *format_ctx;
+    
+    @public AVFormatContext *format_ctx;
 
     // We use this to proxy loading from the vended bytes from whatever the hell sandbox
     // into something that AVFormat can handle
@@ -28,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
     
 }
 @property (readwrite, assign) size_t currentReadOffset;
-@property (readwrite, retain) dispatch_queue_t completionQueue;
+//@property (readwrite, retain) dispatch_queue_t completionQueue;
 @property (readwrite, retain) MEByteSource* byteSource;
 
 - (instancetype) initWithByteSource:(MEByteSource*)byteSource;
