@@ -58,6 +58,7 @@ FFMPEGs library more or less follows similar design patterns to AVFoundation. Th
 * `CMMediaType` <~> `AVMediaType`
 * `CMFormatDescription` <~> `AVCodecParameters`
 * `CMSampleBuffer` <~> `AVPacket`
+* `CMBlockBuffer` <~> `AVBuffer`
 * `CVPixelBuffer` <-> `AVFrame` (decoded video)
 
 * `AVAsset` <~> `AVFormatContext`
