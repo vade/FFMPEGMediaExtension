@@ -34,9 +34,9 @@ This will build you the statically linked libAVFormat.a and libAVCodec.a libries
 * [ ] Implement necessary Media Extension protocols
     * [x] MEFormatReaderExtension
     * [x] MEFormatReader (partial)
-    * [ ] METrackReader
-    * [ ] METrackInfo
-    * [ ] MESampleCursor
+    * [x] METrackReader
+    * [x] METrackInfo
+    * [x] MESampleCursor (partial)
     * [ ] MEVideoDecoderExtension
     * [ ] MEVideoDecoder
     * [ ] MEVideoDecoderPixelBufferManager
