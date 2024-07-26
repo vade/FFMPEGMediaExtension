@@ -40,7 +40,7 @@ This will build you the statically linked libAVFormat.a and libAVCodec.a libries
     * [ ] MEVideoDecoderExtension
     * [ ] MEVideoDecoder
     * [ ] MEVideoDecoderPixelBufferManager
-* [ ] impelment Extension requirements (plists, entitlements, etc)
+* [x] impelment Extension requirements (plists, entitlements, etc)
 
 
 ## Strategy

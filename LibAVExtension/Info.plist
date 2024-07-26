@@ -5,7 +5,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>info.vade.LibAVExtension</string>
 	<key>CFBundleVersion</key>
-	<string>0.0.1</string>
+	<string>0.0.1.1</string>
 	<key>CFBundleDisplayName</key>
 	<string>FFMPEG Media Extension</string>
 	<key>EXAppExtensionAttributes</key>
@@ -21,8 +21,6 @@
 		<key>MTFileNameExtensionArray</key>
 		<array>
 			<string>mkv</string>
-			<string>wmv</string>
-			<string>avi</string>
 		</array>
 		<key>MTUTTypeArray</key>
 		<array>
@@ -50,5 +48,20 @@
 			</dict>
 		</array>
 	</dict>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.mediaextension-content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>This Media Extension provides support for FFMPEG based formts and codecs</string>
+			<key>UTTypeIdentifier</key>
+			<string>org.matroska.mkv</string>
+			<key>UTTypeTagSpecification</key>
+			<dict/>
+		</dict>
+	</array>
 </dict>
 </plist>
