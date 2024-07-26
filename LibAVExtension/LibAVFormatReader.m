@@ -13,6 +13,7 @@ int readPacket(void *opaque, uint8_t *buf, int buf_size)
 {
     LibAVFormatReader* formatReader = (__bridge LibAVFormatReader*) opaque;
 
+    // this causes overflow lol
 //    buf_size = FFMIN(buf_size, (int)[formatReader.byteSource fileLength]);
     
     size_t bytesRead = 0;
@@ -142,35 +143,27 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 
 - (void)loadTrackReadersWithCompletionHandler:(nonnull void (^)(NSArray<id<METrackReader>> * _Nullable, NSError * _Nullable))completionHandler
 {
+    LibAVFormatReader* __weak weakSelf = self;
+
     dispatch_async(self.completionQueue, ^{
+        
+        LibAVFormatReader* strongSelf = weakSelf;
 
         NSLog(@"loadTrackReadersWithCompletionHandler");
 
-    // iterate over our loaded tracks and create a LibAVTrackReader for each
+        // iterate over our loaded tracks and create a LibAVTrackReader for each
+        NSMutableArray<LibAVTrackReader*>* trackReaders = [NSMutableArray new];
+
+        for (unsigned int i = 0; i < strongSelf->format_ctx->nb_streams; i++) {
+            AVStream *stream = strongSelf->format_ctx->streams[i];
+           
+            LibAVTrackReader* trackReader = [[LibAVTrackReader alloc] initWithStream:stream];
+            // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
+            
+            [trackReaders addObject:trackReader];
+        }
     
-//        NSMutableArray<LibAVTrackReader*>* trackReaders = [NSMutableArray new];
-//
-//        for (unsigned int i = 0; i < formatContext->nb_streams; i++) {
-//            AVStream *stream = formatContext->streams[i];
-//            AVCodecParameters *codecpar = stream->codecpar;
-//
-//            // You can check the codec type to determine if it's video, audio, etc.
-//            if (codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-//                // This is a video stream
-//                printf("Video Stream: %d\n", i);
-//                printf("Resolution: %dx%d\n", codecpar->width, codecpar->height);
-//                printf("Codec ID: %d\n", codecpar->codec_id);
-//            } else if (codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-//                // This is an audio stream
-//                printf("Audio Stream: %d\n", i);
-//                printf("Sample Rate: %d\n", codecpar->sample_rate);
-//                printf("Channels: %d\n", codecpar->ch_layout);
-//                printf("Codec ID: %d\n", codecpar->codec_id);
-//            }
-//            // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
-//        }
-    
-        completionHandler(nil, nil);
+        completionHandler(trackReaders, nil);
     });
     
 }
