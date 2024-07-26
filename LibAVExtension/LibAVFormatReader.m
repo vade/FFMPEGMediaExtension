@@ -12,23 +12,24 @@
 int readPacket(void *opaque, uint8_t *buf, int buf_size)
 {
     LibAVFormatReader* formatReader = (__bridge LibAVFormatReader*) opaque;
-//    
-//    [formatReader.byteSource readDataOfLength:<#(size_t)#>
-//                                   fromOffset:<#(int64_t)#>
-//                                toDestination:<#(nonnull void *)#>
-//                                    bytesRead:<#(nonnull size_t *)#>
-//                                        error:<#(NSError *__autoreleasing  _Nullable * _Nullable)#>]
+
+//    buf_size = FFMIN(buf_size, (int)[formatReader.byteSource fileLength]);
     
-//    size_t remaining = dataSize - currentOffset;
-//    size_t toCopy = FFMIN(buf_size, remaining);
-//    
-//    
-//    
-//    memcpy(buf, dataBuffer + currentOffset, toCopy);
-//    currentOffset += toCopy;
-//    return toCopy;
+    size_t bytesRead = 0;
     
-    return 0;
+    NSLog(@"LibAVFormatReader got readPacket %i %p", buf_size, buf);
+
+    [formatReader.byteSource readDataOfLength:buf_size
+                                   fromOffset:formatReader.currentReadOffset
+                                toDestination:buf
+                                    bytesRead:&bytesRead
+                                        error:nil];
+    
+    formatReader.currentReadOffset += bytesRead;
+    
+//    int64_t remaining = [formatReader.byteSource availableLengthAtOffset: formatReader.currentReadOffset];
+    
+    return buf_size;
 }
 
 // Seek callback (optional, if your format requires it)
@@ -38,16 +39,16 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 
     switch (whence) {
         case SEEK_SET:
-//            currentOffset = offset;
+            formatReader.currentReadOffset = offset;
             break;
         case SEEK_CUR:
-//            currentOffset += offset;
+            formatReader.currentReadOffset += offset;
             break;
         case SEEK_END:
-//            currentOffset = dataSize + offset;
+            formatReader.currentReadOffset = [formatReader.byteSource fileLength] + offset;
             break;
         case AVSEEK_SIZE:
-//            return dataSize;
+            return [formatReader.byteSource fileLength];
     }
     return 0;
 }
@@ -58,7 +59,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 + (void) initialize
 {
     // Seems as though this has been deprecated for a while.
-    // ive been doing this for too long
+    // I've been doing this for too long
     // av_register_all();
 }
 
@@ -69,10 +70,8 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     {
         NSLog(@"Initiaizing LibAVFormatReader");
         self.byteSource = byteSource;
-        
         self.completionQueue = dispatch_queue_create("info.vade.LibAVExtension.completionQueue", DISPATCH_QUEUE_SERIAL);
-        
-        
+        self.currentReadOffset = 0;
     }
     
     return self;
@@ -80,8 +79,8 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 
 - (void) dealloc
 {
-    avformat_close_input(&formatContext);
-    formatContext = NULL;
+    avformat_close_input(&format_ctx);
+    format_ctx = NULL;
 
     avio_context_free(&avio_ctx);
     avio_ctx = NULL;
@@ -103,25 +102,30 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         NSLog(@"loadFileInfoWithCompletionHandler");
         MEFileInfo* fileInfo = [[MEFileInfo alloc] init];
         
+        strongSelf->format_ctx = avformat_alloc_context();
+
         strongSelf->avio_ctx_buffer = av_malloc(4096);
 
         // Pass self so we have a callback to our Obj-C objects properties
-        strongSelf->avio_ctx = avio_alloc_context(strongSelf->avio_ctx_buffer, 4096, 0, (__bridge void *)(strongSelf), readPacket, NULL, seek);
+        strongSelf->avio_ctx = avio_alloc_context(strongSelf->avio_ctx_buffer, 4096, 0, (__bridge void *)(strongSelf), &readPacket, NULL, &seek);
         
-        strongSelf->formatContext = avformat_alloc_context();
         
-        strongSelf->formatContext->pb = strongSelf->avio_ctx;
+        strongSelf->format_ctx->pb = strongSelf->avio_ctx;
         
-        if (avformat_open_input(&(strongSelf->formatContext), NULL, NULL, NULL) < 0)
+        if (avformat_open_input(&(strongSelf->format_ctx), NULL, NULL, NULL) < 0)
         {
             // Handle error
+            NSLog(@"loadFileInfoWithCompletionHandler unable to open input");
+
         }
         
-        avformat_find_stream_info(self->formatContext, NULL);
+        avformat_find_stream_info(self->format_ctx, NULL);
         
-        fileInfo.duration = CMTimeMakeWithSeconds(400,600);// CMTimeMake(self->formatContext->duration, AV_TIME_BASE);
+        fileInfo.duration = CMTimeMake(self->format_ctx->duration, AV_TIME_BASE);
         fileInfo.fragmentsStatus = MEFileInfoCouldNotContainFragments;
         
+        NSLog(@"loadFileInfoWithCompletionHandler got duration: %@", CMTimeCopyDescription(kCFAllocatorDefault, fileInfo.duration) );
+
         completionHandler(fileInfo, nil);
     });
 }
@@ -144,29 +148,29 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 
     // iterate over our loaded tracks and create a LibAVTrackReader for each
     
-    NSMutableArray<LibAVTrackReader*>* trackReaders = [NSMutableArray new];
+//        NSMutableArray<LibAVTrackReader*>* trackReaders = [NSMutableArray new];
+//
+//        for (unsigned int i = 0; i < formatContext->nb_streams; i++) {
+//            AVStream *stream = formatContext->streams[i];
+//            AVCodecParameters *codecpar = stream->codecpar;
+//
+//            // You can check the codec type to determine if it's video, audio, etc.
+//            if (codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+//                // This is a video stream
+//                printf("Video Stream: %d\n", i);
+//                printf("Resolution: %dx%d\n", codecpar->width, codecpar->height);
+//                printf("Codec ID: %d\n", codecpar->codec_id);
+//            } else if (codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+//                // This is an audio stream
+//                printf("Audio Stream: %d\n", i);
+//                printf("Sample Rate: %d\n", codecpar->sample_rate);
+//                printf("Channels: %d\n", codecpar->ch_layout);
+//                printf("Codec ID: %d\n", codecpar->codec_id);
+//            }
+//            // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
+//        }
     
-    for (unsigned int i = 0; i < formatContext->nb_streams; i++) {
-        AVStream *stream = formatContext->streams[i];
-        AVCodecParameters *codecpar = stream->codecpar;
-        
-        // You can check the codec type to determine if it's video, audio, etc.
-        if (codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-            // This is a video stream
-            printf("Video Stream: %d\n", i);
-            printf("Resolution: %dx%d\n", codecpar->width, codecpar->height);
-            printf("Codec ID: %d\n", codecpar->codec_id);
-        } else if (codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            // This is an audio stream
-            printf("Audio Stream: %d\n", i);
-            printf("Sample Rate: %d\n", codecpar->sample_rate);
-            printf("Channels: %d\n", codecpar->ch_layout);
-            printf("Codec ID: %d\n", codecpar->codec_id);
-        }
-        // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
-    }
-    
-        completionHandler(trackReaders, nil);
+        completionHandler(nil, nil);
     });
     
 }
