@@ -22,6 +22,10 @@
 @property (nonatomic, readwrite) CMTime currentSampleDuration;
 @property (nonatomic, readwrite, nullable) __attribute__((NSObject)) CMFormatDescriptionRef currentSampleFormatDescription;
 
+// private
+@property (nonatomic, readwrite, assign) NSUInteger sampleOffset;
+@property (nonatomic, readwrite, assign) NSUInteger sampleSize;
+
 @end
 
 @implementation LibAVSampleCursor
@@ -36,9 +40,12 @@
         self.presentationTimeStamp = kCMTimeZero;
         self.decodeTimeStamp = kCMTimeZero;
         self.currentSampleDuration = kCMTimeInvalid;
-
+        
         // TODO: Check assumption - Im assuming we wont have formats change mid stream?
         self.currentSampleFormatDescription = [trackReader formatDescription];
+        
+        self.sampleSize = 0;
+        self.sampleOffset = 0;
     }
     
     return self;
@@ -144,6 +151,7 @@
     }
 }
 
+// TODO: needs work
 - (void)stepInPresentationOrderByCount:(int64_t)stepCount completionHandler:(nonnull void (^)(int64_t, NSError * _Nullable))completionHandler
 {
     int64_t framesStepped = 0;
@@ -168,6 +176,19 @@
     } else {
         completionHandler(framesStepped, nil);
     }
+}
+
+- (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
+{
+    NSLog(@"sampleLocationReturningError");
+    
+    AVSampleCursorStorageRange range;
+    range.offset = self.sampleOffset;
+    range.length = self.sampleSize;
+    
+    MESampleLocation* location = [[MESampleLocation alloc] initWithByteSource:self.trackReader.formatReader.byteSource sampleLocation:range];
+    
+    return location;
 }
 
 
@@ -205,6 +226,13 @@
     self.decodeTimeStamp = [self convertToCMTime:packet->dts timebase:self.trackReader->stream->time_base];
     self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
     self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
+    
+    self.sampleSize = packet->size;
+    self.sampleOffset = packet->pos;
+    
+    NSLog(@"Decode Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));
+    NSLog(@"Presentation Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
+    NSLog(@"Duration %@", CMTimeCopyDescription(kCFAllocatorDefault, self.currentSampleDuration));
 }
 
 @end
