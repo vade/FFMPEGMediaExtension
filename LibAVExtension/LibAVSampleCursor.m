@@ -63,7 +63,7 @@
     CMTime targetDTS = CMTimeAdd(self.decodeTimeStamp, deltaDecodeTime);
     
     int ret = av_seek_frame(self.trackReader.formatReader->format_ctx,
-                            self.trackReader.streamIndex - 1, // aaaaahhhh 
+                            self.trackReader.streamIndex - 1, // aaaaahhhh
                             targetDTS.value,
                             AVSEEK_FLAG_BACKWARD);
     if (ret < 0)
@@ -93,7 +93,7 @@
     CMTime targetPTS = CMTimeAdd(self.presentationTimeStamp, deltaPresentationTime);
 
     int ret = av_seek_frame(self.trackReader.formatReader->format_ctx,
-                            self.trackReader.streamIndex,
+                            self.trackReader.streamIndex - 1,
                             targetPTS.value,
                             AVSEEK_FLAG_BACKWARD);
     if (ret < 0)
@@ -120,12 +120,54 @@
 
 - (void)stepInDecodeOrderByCount:(int64_t)stepCount completionHandler:(nonnull void (^)(int64_t, NSError * _Nullable))completionHandler
 {
+    int64_t framesStepped = 0;
+
+    AVPacket packet;
+    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0) {
+        if (packet.stream_index == self.trackReader.streamIndex - 1) {
+
+            [self updateStateForPacket:&packet];
+
+            framesStepped++;
+            if (framesStepped >= stepCount) {
+                break;
+            }
+        }
+        av_packet_unref(&packet);
+    }
     
+    if (framesStepped < stepCount) {
+        NSError *error = [NSError errorWithDomain:@"com.example" code:-1 userInfo:nil];
+        completionHandler(framesStepped, error);
+    } else {
+        completionHandler(framesStepped, nil);
+    }
 }
 
 - (void)stepInPresentationOrderByCount:(int64_t)stepCount completionHandler:(nonnull void (^)(int64_t, NSError * _Nullable))completionHandler
 {
+    int64_t framesStepped = 0;
+
+    AVPacket packet;
+    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0) {
+        if (packet.stream_index == self.trackReader.streamIndex - 1) {
+
+            [self updateStateForPacket:&packet];
+
+            framesStepped++;
+            if (framesStepped >= stepCount) {
+                break;
+            }
+        }
+        av_packet_unref(&packet);
+    }
     
+    if (framesStepped < stepCount) {
+        NSError *error = [NSError errorWithDomain:@"com.example" code:-1 userInfo:nil];
+        completionHandler(framesStepped, error);
+    } else {
+        completionHandler(framesStepped, nil);
+    }
 }
 
 
@@ -144,13 +186,9 @@
 
 - (BOOL) isTime:(CMTime)time greaterThanOrEqualTo:(CMTime)target fromPacket:(AVPacket*)packet
 {
-    if (packet->stream_index == self.trackReader.streamIndex)
+    if ( packet->stream_index == self.trackReader.streamIndex - 1 )
     {
-        // Update currentDTS based on the packet's DTS
-        self.decodeTimeStamp = [self convertToCMTime:packet->dts timebase:self.trackReader->stream->time_base];
-        self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
-        self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
-
+        [self updateStateForPacket:packet];
         
         if ( CMTIME_COMPARE_INLINE(time, >=, target) )
         {
@@ -159,6 +197,14 @@
     }
     
     return false;
+}
+
+- (void) updateStateForPacket:(AVPacket*)packet
+{
+    // Update currentDTS based on the packet's DTS
+    self.decodeTimeStamp = [self convertToCMTime:packet->dts timebase:self.trackReader->stream->time_base];
+    self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
+    self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
 }
 
 @end

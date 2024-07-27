@@ -112,7 +112,6 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         // Pass self so we have a callback to our Obj-C objects properties
         strongSelf->avio_ctx = avio_alloc_context(strongSelf->avio_ctx_buffer, 4096, 0, (__bridge void *)(strongSelf), &readPacket, NULL, &seek);
         
-        
         strongSelf->format_ctx->pb = strongSelf->avio_ctx;
         
         if (avformat_open_input(&(strongSelf->format_ctx), NULL, NULL, NULL) < 0)
@@ -162,7 +161,6 @@ int64_t seek(void *opaque, int64_t offset, int whence)
             AVStream *stream = strongSelf->format_ctx->streams[i];
            
             LibAVTrackReader* trackReader = [[LibAVTrackReader alloc] initWithFormatReader:self stream:stream atIndex:i];
-            // You can also handle other types like AVMEDIA_TYPE_SUBTITLE, etc.
             
             [trackReaders addObject:trackReader];
         }

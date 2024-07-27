@@ -23,7 +23,7 @@
     if (self != nil)
     {
         self.formatReader = formatReader;
-        self.streamIndex = index;
+        self.streamIndex = index + 1;
 
         self->stream = stream;
 
@@ -32,23 +32,28 @@
 }
 
 
-- (void)generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler {
+- (void)generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
+{
+    NSLog(@"generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler");
     
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     
     completionHandler(sampleCursor, nil);
 }
 
-- (void)generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler { 
-    
+- (void)generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
+{
+    NSLog(@"generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler");
+
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     
     completionHandler(sampleCursor, nil);
-
 }
 
-- (void)generateSampleCursorAtPresentationTimeStamp:(CMTime)presentationTimeStamp completionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler { 
-    
+- (void)generateSampleCursorAtPresentationTimeStamp:(CMTime)presentationTimeStamp completionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
+{
+    NSLog(@"generateSampleCursorAtPresentationTimeStamp");
+
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     
 //    sampleCursor.presentationTimeStamp = presentationTimeStamp;
@@ -64,13 +69,15 @@
     
     if (format != NULL)
     {
+        NSLog(@"Made Format Description: %@", format);
+
         NSArray* formats = @[(id)CFBridgingRelease(format)];
         
         // This is lame as fuck - we dont have zero based indexes!
         // kCMPersistentTrackID_Invalid = 0 !
         
         METrackInfo* trackInfo = [[METrackInfo alloc] initWithMediaType:[self streamMediaType]
-                                                                trackID:(CMPersistentTrackID)self->stream->index + 1
+                                                                trackID:(CMPersistentTrackID)self.streamIndex
                                                      formatDescriptions:formats];
         
         // TODO: How to know if a stream is enabled?
@@ -78,10 +85,11 @@
         
         // do this in place
         completionHandler(trackInfo, nil);
+        return;
     }
-    
-    
-    
+        
+    completionHandler(nil, nil);
+
 }
 
 // MARK: - Helper Methods
@@ -123,8 +131,8 @@
             return [self videoFormatDescription];
 
         case AVMEDIA_TYPE_AUDIO:
-//            return [self audioFormatDescription];
-            return NULL;
+            return [self audioFormatDescription];
+//            return NULL;
             
         case AVMEDIA_TYPE_DATA:
             return NULL;
@@ -148,6 +156,27 @@
         case AV_CODEC_ID_H264:
             return kCMVideoCodecType_H264;
             
+        default:
+            return -1;
+    }
+}
+
+// BARF
+
+- (AudioFormatID) audioFormatFromCodecID
+{
+    
+    switch (self->stream->codecpar->codec_id)
+    {
+        case AV_CODEC_ID_AAC:
+            return kAudioFormatMPEG4AAC;
+            
+        case AV_CODEC_ID_AC3:
+            return kAudioFormatAC3;
+
+        case AV_CODEC_ID_EAC3:
+            return kAudioFormatEnhancedAC3;
+
         default:
             return -1;
     }
@@ -179,9 +208,7 @@
         // Handle error
         return NULL;
     }
-    
-    NSLog(@"Made Format Description: %@", formatDescription);
-    
+        
     return formatDescription;
 }
 
@@ -189,8 +216,16 @@
 {
     CMAudioFormatDescriptionRef audioFormatDescription = NULL;
     
-    AudioFormatID audioFormatID = (AudioFormatID)self->stream->codecpar->codec_tag;
+    
+    NSLog(@"determinging audio format, %i", self->stream->codecpar->codec_id);
 
+    AudioFormatID audioFormatID = (AudioFormatID)self->stream->codecpar->codec_tag;
+//    if (audioFormatID == 0)
+//    {
+        audioFormatID = [self audioFormatFromCodecID];
+//    }
+
+    
     AudioStreamBasicDescription asbd = {0};
     asbd.mSampleRate = self->stream->codecpar->sample_rate;
     asbd.mChannelsPerFrame = self->stream->codecpar->ch_layout.nb_channels;
