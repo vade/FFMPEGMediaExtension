@@ -17,10 +17,14 @@
 @interface LibAVSampleCursor ()
 @property (readwrite, strong) LibAVTrackReader* trackReader;
 
+// Required Private Setters
 @property (nonatomic, readwrite) CMTime presentationTimeStamp;
 @property (nonatomic, readwrite) CMTime decodeTimeStamp;
 @property (nonatomic, readwrite) CMTime currentSampleDuration;
 @property (nonatomic, readwrite, nullable) __attribute__((NSObject)) CMFormatDescriptionRef currentSampleFormatDescription;
+
+// Optional Sync Private Setters
+@property (nonatomic, readwrite) AVSampleCursorSyncInfo syncInfo;
 
 // private
 @property (nonatomic, readwrite, assign) NSUInteger sampleOffset;
@@ -51,18 +55,30 @@
     return self;
 }
 
+// MARK: - MESampleCursor Protocol Requirements
+
 
 - (nonnull id)copyWithZone:(nullable NSZone *)zone
 {
     LibAVSampleCursor* copy = [[LibAVSampleCursor alloc] initWithTrackReader:self.trackReader];
     
+    // Reuquired
     copy.presentationTimeStamp = self.presentationTimeStamp;
     copy.decodeTimeStamp = self.decodeTimeStamp;
     copy.currentSampleDuration = self.currentSampleDuration;
     copy.currentSampleFormatDescription = self.currentSampleFormatDescription;
-    
+
+    // Optional
+    copy.syncInfo = self.syncInfo;
+
+    // Private
+    copy.sampleSize = self.sampleSize;
+    copy.sampleOffset = self.sampleOffset;
+
     return copy;
 }
+
+
 
 - (void)stepByDecodeTime:(CMTime)deltaDecodeTime
        completionHandler:(nonnull void (^)(CMTime, BOOL, NSError * _Nullable))completionHandler
@@ -178,6 +194,8 @@
     }
 }
 
+// MARK: - Sample Location
+
 - (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 {
     NSLog(@"sampleLocationReturningError");
@@ -191,8 +209,28 @@
     return location;
 }
 
+// MARK: - Optional Sync Methods
+
 
 // MARK: - Helper Methods
+
+- (void) updateStateForPacket:(const AVPacket*)packet
+{
+    // Update currentDTS based on the packet's DTS
+    self.decodeTimeStamp = [self convertToCMTime:packet->dts timebase:self.trackReader->stream->time_base];
+    self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
+    self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
+    
+    self.syncInfo = [self extractSyncInfoFrom:packet];
+    
+    self.sampleSize = packet->size;
+    self.sampleOffset = packet->pos;
+    
+    NSLog(@"Decode Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));
+    NSLog(@"Presentation Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
+    NSLog(@"Duration %@", CMTimeCopyDescription(kCFAllocatorDefault, self.currentSampleDuration));
+}
+
 
 // Function to convert FFmpeg PTS/DTS to CMTime
 - (CMTime) convertToCMTime:(int64_t)ptsOrDts timebase:(AVRational)timeBase
@@ -205,7 +243,7 @@
     return time;
 }
 
-- (BOOL) isTime:(CMTime)time greaterThanOrEqualTo:(CMTime)target fromPacket:(AVPacket*)packet
+- (BOOL) isTime:(CMTime)time greaterThanOrEqualTo:(CMTime)target fromPacket:(const AVPacket*)packet
 {
     if ( packet->stream_index == self.trackReader.streamIndex - 1 )
     {
@@ -220,19 +258,25 @@
     return false;
 }
 
-- (void) updateStateForPacket:(AVPacket*)packet
+- (AVSampleCursorSyncInfo) extractSyncInfoFrom:(const AVPacket*)packet
 {
-    // Update currentDTS based on the packet's DTS
-    self.decodeTimeStamp = [self convertToCMTime:packet->dts timebase:self.trackReader->stream->time_base];
-    self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
-    self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
-    
-    self.sampleSize = packet->size;
-    self.sampleOffset = packet->pos;
-    
-    NSLog(@"Decode Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));
-    NSLog(@"Presentation Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
-    NSLog(@"Duration %@", CMTimeCopyDescription(kCFAllocatorDefault, self.currentSampleDuration));
-}
+    AVSampleCursorSyncInfo syncInfo = {0};
 
+    // Check if the packet is a keyframe (full sync)
+    if (packet->flags & AV_PKT_FLAG_KEY)
+    {
+        syncInfo.sampleIsFullSync = YES;
+    }
+
+    // Partial sync determination is codec-specific and may not always be available
+    syncInfo.sampleIsPartialSync = NO; // Defaulting to NO
+
+    // Check if the packet is droppable (disposable or discardable)
+    if (packet->flags & (AV_PKT_FLAG_DISPOSABLE | AV_PKT_FLAG_DISCARD))
+    {
+        syncInfo.sampleIsDroppable = YES;
+    }
+
+    return syncInfo;
+}
 @end
