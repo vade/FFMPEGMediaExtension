@@ -2,7 +2,19 @@
 
 This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theory would allow for native AVFOundation container parsing and decode.
 
-Since MediaExtensions are shipped in a host app, this has a stupid Host app.
+Since MediaExtensions are shipped in a host app, this has also provides a Host app.
+
+## Goal
+
+Provide additional media format playback support for any macOS app which leverages AVFoundation / Core Media as its underlying playback / decode engine
+
+* Finder
+* Quicklook
+* Quicktime Player
+* Any other app which opts in by calling:
+    * `MTRegisterProfessionalVideoWorkflowFormatReaders()` for format parsing support
+    * `VTRegisterProfessionalVideoWorkflowVideoDecoders()` for additional decoder support
+
 
 ## Requirements:
 
@@ -43,6 +55,11 @@ MEFormatReader (LibAVFOrmatReader)
     * [ ] Sample Sync info
     * [ ] Sample Dependency info
     * [ ] Post Decode Processing Data 
+
+MEVideoDecoder
+* Not yet started
+* This means today we only add container support, not yet additional codecs
+* Stay tuned
 
 ## Todo:
 
