@@ -162,7 +162,8 @@ int64_t seek(void *opaque, int64_t offset, int whence)
            
             // TODO: Only support video and audio tracks for now
             if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO
-                || stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+//                || stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO
+                )
             {
                 LibAVTrackReader* trackReader = [[LibAVTrackReader alloc] initWithFormatReader:self stream:stream atIndex:i];
                 

@@ -87,10 +87,9 @@
 {
     CMTime targetDTS = CMTimeAdd(self.decodeTimeStamp, deltaDecodeTime);
     
-    int ret = av_seek_frame(self.trackReader.formatReader->format_ctx,
-                            self.trackReader.streamIndex - 1, // aaaaahhhh
-                            targetDTS.value,
-                            AVSEEK_FLAG_BACKWARD);
+    // TODO: This seems wrong
+    int ret = [self seekToPTS:targetDTS];
+
     if (ret < 0)
     {
         NSError *error = [NSError errorWithDomain:@"com.example" code:ret userInfo:nil];
@@ -117,10 +116,8 @@
 {
     CMTime targetPTS = CMTimeAdd(self.presentationTimeStamp, deltaPresentationTime);
 
-    int ret = av_seek_frame(self.trackReader.formatReader->format_ctx,
-                            self.trackReader.streamIndex - 1,
-                            targetPTS.value,
-                            AVSEEK_FLAG_BACKWARD);
+    int ret = [self seekToPTS:targetPTS];
+    
     if (ret < 0)
     {
         NSError *error = [NSError errorWithDomain:@"com.example" code:ret userInfo:nil];
@@ -145,26 +142,38 @@
 
 - (void)stepInDecodeOrderByCount:(int64_t)stepCount completionHandler:(nonnull void (^)(int64_t, NSError * _Nullable))completionHandler
 {
+    
+    // Determine the direction
+    CMTime targetTime = [self estimateTargetTimeUsingCurrentDurationForSteps:stepCount relativeToReferenceTime:self.decodeTimeStamp];
+
+    // TODO: This seems wrong
+    [self seekToPTS:targetTime];
+
     int64_t framesStepped = 0;
 
     AVPacket packet;
-    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0) {
-        if (packet.stream_index == self.trackReader.streamIndex - 1) {
-
+    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0)
+    {
+        if (packet.stream_index == self.trackReader.streamIndex - 1)
+        {
             [self updateStateForPacket:&packet];
 
             framesStepped++;
-            if (framesStepped >= stepCount) {
+            if (framesStepped >= stepCount)
+            {
                 break;
             }
         }
         av_packet_unref(&packet);
     }
     
-    if (framesStepped < stepCount) {
+    if (framesStepped < stepCount)
+    {
         NSError *error = [NSError errorWithDomain:@"com.example" code:-1 userInfo:nil];
         completionHandler(framesStepped, error);
-    } else {
+    }
+    else
+    {
         completionHandler(framesStepped, nil);
     }
 }
@@ -172,29 +181,40 @@
 // TODO: needs work
 - (void)stepInPresentationOrderByCount:(int64_t)stepCount completionHandler:(nonnull void (^)(int64_t, NSError * _Nullable))completionHandler
 {
+    // Determine the direction
+    CMTime targetTime = [self estimateTargetTimeUsingCurrentDurationForSteps:stepCount relativeToReferenceTime:self.presentationTimeStamp];
+    
+    [self seekToPTS:targetTime];
+    
     int64_t framesStepped = 0;
 
     AVPacket packet;
-    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0) {
-        if (packet.stream_index == self.trackReader.streamIndex - 1) {
-
+    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0)
+    {
+        if (packet.stream_index == self.trackReader.streamIndex - 1)
+        {
             [self updateStateForPacket:&packet];
 
             framesStepped++;
-            if (framesStepped >= stepCount) {
+            if (framesStepped >= stepCount)
+            {
                 break;
             }
         }
         av_packet_unref(&packet);
     }
     
-    if (framesStepped < stepCount) {
+    if (framesStepped < stepCount)
+    {
         NSError *error = [NSError errorWithDomain:@"com.example" code:-1 userInfo:nil];
         completionHandler(framesStepped, error);
-    } else {
+    }
+    else
+    {
         completionHandler(framesStepped, nil);
     }
 }
+
 
 // MARK: - Sample Location
 
@@ -215,6 +235,40 @@
 
 
 // MARK: - Helper Methods
+
+- (void) seekToBeginningOfFile
+{
+    NSLog(@"seekToBeginningOfFile Not implemented");
+}
+
+- (void) seekToEndOfFile
+{
+    NSLog(@"seekToEndOfFile Not implemented");
+}
+
+// TODO: - Confirm Seek is generally PTS based?
+- (int) seekToPTS:(CMTime)time
+{
+    CMTime timeInStreamUnits = CMTimeConvertScale(time, self.trackReader->stream->time_base.den, kCMTimeRoundingMethod_Default);
+    
+    return av_seek_frame(self.trackReader.formatReader->format_ctx,
+                         self.trackReader.streamIndex - 1,
+                         timeInStreamUnits.value,
+                         AVSEEK_FLAG_BACKWARD);
+}
+
+// Reference time should be PTS or DTS - step count
+- (CMTime) estimateTargetTimeUsingCurrentDurationForSteps:(int64_t)stepCount relativeToReferenceTime:(CMTime)referenceTime
+{
+    // Determine the direction
+    BOOL steppingBackward = (stepCount < 0);
+    int64_t absStepCount = ABS(stepCount);
+
+    CMTime stepCountAsCMTime = CMTimeMultiply(self.currentSampleDuration, stepCount);
+
+    return CMTimeAdd(referenceTime, stepCountAsCMTime);
+}
+
 
 - (void) updateStateForPacket:(const AVPacket*)packet
 {
@@ -238,11 +292,28 @@
 // Function to convert FFmpeg PTS/DTS to CMTime
 - (CMTime) convertToCMTime:(int64_t)ptsOrDts timebase:(AVRational)timeBase
 {
+    NSLog(@"convertToCMTime %lli to timeBase %i/%i", ptsOrDts, timeBase.num, timeBase.den);
+    
+    if (ptsOrDts == INT64_MAX)
+    {
+        NSLog(@"Recieved Invalid timestamp INT64_MAX");
+        return kCMTimeInvalid;
+    }
+    else if (ptsOrDts == INT64_MIN)
+    {
+        NSLog(@"Recieved Invalid timestamp INT64_MIN");
+        return kCMTimeNegativeInfinity;
+    }
+    
+    
     // Convert to seconds using the time base
     double seconds = (double)ptsOrDts * av_q2d(timeBase);
     
     // CMTime uses an int64 value to represent time, with a timescale to denote fractional seconds
     CMTime time = CMTimeMakeWithSeconds(seconds, timeBase.den);
+    
+    NSLog(@"Converted %@", CMTimeCopyDescription(kCFAllocatorDefault, time));
+    
     return time;
 }
 
@@ -260,6 +331,22 @@
     
     return false;
 }
+
+- (BOOL) isTime:(CMTime)time lessThanOrEqualTo:(CMTime)target fromPacket:(const AVPacket*)packet
+{
+    if ( packet->stream_index == self.trackReader.streamIndex - 1 )
+    {
+        [self updateStateForPacket:packet];
+        
+        if ( CMTIME_COMPARE_INLINE(time, <=, target) )
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 
 - (AVSampleCursorSyncInfo) extractSyncInfoFrom:(const AVPacket*)packet
 {

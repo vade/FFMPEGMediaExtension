@@ -30,6 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader;
 
+- (void) seekToBeginningOfFile;
+- (void) seekToEndOfFile;
+
 @end
 
 NS_ASSUME_NONNULL_END

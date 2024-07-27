@@ -37,6 +37,7 @@
     NSLog(@"generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler");
     
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
+    [sampleCursor seekToBeginningOfFile];
     
     completionHandler(sampleCursor, nil);
 }
@@ -46,13 +47,15 @@
     NSLog(@"generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler");
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
+    [sampleCursor seekToBeginningOfFile];
+
     
     completionHandler(sampleCursor, nil);
 }
 
 - (void)generateSampleCursorAtPresentationTimeStamp:(CMTime)presentationTimeStamp completionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
 {
-    NSLog(@"generateSampleCursorAtPresentationTimeStamp");
+    NSLog(@"generateSampleCursorAtPresentationTimeStamp %@", CMTimeCopyDescription(kCFAllocatorDefault, presentationTimeStamp));
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     
