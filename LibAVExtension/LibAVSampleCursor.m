@@ -25,6 +25,7 @@
 
 // Optional Sync Private Setters
 @property (nonatomic, readwrite) AVSampleCursorSyncInfo syncInfo;
+@property (nonatomic, readwrite) AVSampleCursorDependencyInfo currentSampleDependencyInfo;
 
 // private
 @property (nonatomic, readwrite, assign) NSUInteger sampleOffset;
@@ -70,7 +71,8 @@
 
     // Optional
     copy.syncInfo = self.syncInfo;
-
+    copy.currentSampleDependencyInfo = self.currentSampleDependencyInfo;
+    
     // Private
     copy.sampleSize = self.sampleSize;
     copy.sampleOffset = self.sampleOffset;
@@ -222,6 +224,7 @@
     self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
     
     self.syncInfo = [self extractSyncInfoFrom:packet];
+    self.currentSampleDependencyInfo = [self extractDependencyInfoFromPacket:packet codecParameters:self.trackReader->stream->codecpar];
     
     self.sampleSize = packet->size;
     self.sampleOffset = packet->pos;
@@ -278,5 +281,27 @@
     }
 
     return syncInfo;
+}
+
+- (AVSampleCursorDependencyInfo) extractDependencyInfoFromPacket:(const AVPacket*)packet codecParameters:(const AVCodecParameters*) codecpar
+{
+    AVSampleCursorDependencyInfo depInfo = {0};
+
+    // Check if the packet is a keyframe
+    BOOL isKeyframe = packet->flags & AV_PKT_FLAG_KEY;
+    
+    // Determine if the sample depends on others
+    depInfo.sampleIndicatesWhetherItDependsOnOthers = YES;
+    depInfo.sampleDependsOnOthers = !isKeyframe; // Keyframes don't depend on others
+
+    // Determine if there are dependent samples
+    depInfo.sampleIndicatesWhetherItHasDependentSamples = YES;
+    depInfo.sampleHasDependentSamples = isKeyframe; // Keyframes typically have dependents
+
+    // Redundant coding is codec-specific and often not directly exposed in FFmpeg
+    depInfo.sampleIndicatesWhetherItHasRedundantCoding = NO;
+    depInfo.sampleHasRedundantCoding = NO; // Defaulting to NO, this would require codec-specific logic
+
+    return depInfo;
 }
 @end

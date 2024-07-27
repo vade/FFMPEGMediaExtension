@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Optional Sync Properties
 @property (nonatomic, readonly) AVSampleCursorSyncInfo syncInfo;
+@property (nonatomic, readonly) AVSampleCursorDependencyInfo currentSampleDependencyInfo;
 
 
 - (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader;
