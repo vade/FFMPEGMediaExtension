@@ -26,6 +26,24 @@ FFMPEG is installed as a submodule - so ensure you git checkout the submodule an
 
 This will build you the statically linked libAVFormat.a and libAVCodec.a libries 
 
+## Design
+
+MEFormatReader (LibAVFOrmatReader)
+* [x] Plugin instantiation via `LibAVFormatReaderFactory`
+* [x] Register a limited number of supported container formats via plist / exported content types
+    * [x] MKV
+    * Adding new Containers requires editing multiple annoying Plist entries
+* [x] Basic Container parsing via libavformat (`LibAVFormatReader`)
+* [ ] Container metadata to AVMetadataItems
+* [x] Track Parsing (Audio and Video only right now) (`LibAVTrackReader`)
+* [ ] Track specific metadata to AVMEtadataItems
+* [x] CMFormatDescriptions for our Tracks
+* [x] Seek / Stepping via `LibAVSampleCursor`
+* [ ] Provide additional sample metadata that some formats require
+    * [ ] Sample Sync info
+    * [ ] Sample Dependency info
+    * [ ] Post Decode Processing Data 
+
 ## Todo:
 
 * [x] libavformat / libavcodec, libavutil compiled as a .a
@@ -41,7 +59,7 @@ This will build you the statically linked libAVFormat.a and libAVCodec.a libries
     * [ ] MEVideoDecoder
     * [ ] MEVideoDecoderPixelBufferManager
 * [x] impelment Extension requirements (plists, entitlements, etc)
-
+* [ ] Memory Management pass in ObjC / C 
 
 ## Strategy
 
@@ -64,6 +82,7 @@ FFMPEGs library more or less follows similar design patterns to AVFoundation. Th
 * `AVAsset` <~> `AVFormatContext`
 * `AVAssetTrack` <~> `AVStream`
 * `AVSampleCursor` <~> `AVIOContext` 
+
 
 
 
