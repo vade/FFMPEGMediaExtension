@@ -23,10 +23,10 @@
     if (self != nil)
     {
         self.formatReader = formatReader;
+
+        // Cannot have zero index tracks in AVF - ( kCMPersistentTrackID_Invalid = 0 )
         self.streamIndex = index + 1;
-
         self->stream = stream;
-
     }
     return self;
 }
@@ -47,7 +47,7 @@
     NSLog(@"generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler");
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
-    [sampleCursor seekToBeginningOfFile];
+    [sampleCursor seekToEndOfFile];
 
     
     completionHandler(sampleCursor, nil);
@@ -59,7 +59,7 @@
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     
-//    sampleCursor.presentationTimeStamp = presentationTimeStamp;
+    [sampleCursor seekToPTS:presentationTimeStamp];
     
     completionHandler(sampleCursor, nil);
 
@@ -135,7 +135,6 @@
 
         case AVMEDIA_TYPE_AUDIO:
             return [self audioFormatDescription];
-//            return NULL;
             
         case AVMEDIA_TYPE_DATA:
             return NULL;

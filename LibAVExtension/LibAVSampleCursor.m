@@ -216,7 +216,7 @@
 }
 
 
-// MARK: - Sample Location
+// MARK: - Sample Location & Delivery
 
 - (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 {
@@ -229,6 +229,28 @@
     MESampleLocation* location = [[MESampleLocation alloc] initWithByteSource:self.trackReader.formatReader.byteSource sampleLocation:range];
     
     return location;
+}
+
+- (MESampleCursorChunk * _Nullable) chunkDetailsReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
+{
+    NSLog(@"chunkDetailsReturningError");
+
+    AVSampleCursorStorageRange range;
+    range.offset = self.sampleOffset;
+    range.length = self.sampleSize;
+
+    AVSampleCursorChunkInfo info;
+    info.chunkSampleCount = 1; // NO IDEA LOLZ
+    info.chunkHasUniformSampleSizes = false;
+    info.chunkHasUniformSampleDurations = false;
+    info.chunkHasUniformFormatDescriptions = true;
+    
+    MESampleCursorChunk* chunk = [[MESampleCursorChunk alloc] initWithByteSource:self.trackReader.formatReader.byteSource
+                                                               chunkStorageRange:range
+                                                                       chunkInfo:info
+                                                          sampleIndexWithinChunk:0];
+    
+    return chunk;
 }
 
 // MARK: - Optional Sync Methods
@@ -260,9 +282,9 @@
 // Reference time should be PTS or DTS - step count
 - (CMTime) estimateTargetTimeUsingCurrentDurationForSteps:(int64_t)stepCount relativeToReferenceTime:(CMTime)referenceTime
 {
-    // Determine the direction
-    BOOL steppingBackward = (stepCount < 0);
-    int64_t absStepCount = ABS(stepCount);
+//    // Determine the direction
+//    BOOL steppingBackward = (stepCount < 0);
+//    int64_t absStepCount = ABS(stepCount);
 
     CMTime stepCountAsCMTime = CMTimeMultiply(self.currentSampleDuration, stepCount);
 
@@ -276,6 +298,20 @@
     self.decodeTimeStamp = [self convertToCMTime:packet->dts timebase:self.trackReader->stream->time_base];
     self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
     self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
+    
+    // We have have gotten some bad time stamps above
+    
+    // FFMPEG will more likely give us valid PTS than DTS
+    // So lets compare DTS - if its invalid, check PTS and assign
+    // if both are invalid we're fucked.
+    if (CMTIME_IS_INVALID(self.decodeTimeStamp))
+    {
+        if (CMTIME_IS_VALID(self.presentationTimeStamp))
+        {
+            self.decodeTimeStamp = self.presentationTimeStamp;
+        }
+    }
+    
     
     self.syncInfo = [self extractSyncInfoFrom:packet];
     self.currentSampleDependencyInfo = [self extractDependencyInfoFromPacket:packet codecParameters:self.trackReader->stream->codecpar];
@@ -292,20 +328,25 @@
 // Function to convert FFmpeg PTS/DTS to CMTime
 - (CMTime) convertToCMTime:(int64_t)ptsOrDts timebase:(AVRational)timeBase
 {
-    NSLog(@"convertToCMTime %lli to timeBase %i/%i", ptsOrDts, timeBase.num, timeBase.den);
+//    NSLog(@"convertToCMTime %lli to timeBase %i/%i", ptsOrDts, timeBase.num, timeBase.den);
+    
+    if (ptsOrDts == AV_NOPTS_VALUE)
+    {
+        NSLog(@"Recieved Invalid timestamp AV_NOPTS_VALUE - returning kCMTimeInvalid");
+        return kCMTimeInvalid;
+    }
     
     if (ptsOrDts == INT64_MAX)
     {
-        NSLog(@"Recieved Invalid timestamp INT64_MAX");
+        NSLog(@"Recieved Invalid timestamp INT64_MAX - returning kCMTimeInvalid");
         return kCMTimeInvalid;
     }
     else if (ptsOrDts == INT64_MIN)
     {
-        NSLog(@"Recieved Invalid timestamp INT64_MIN");
+        NSLog(@"Recieved Invalid timestamp INT64_MIN - returning kCMTimeNegativeInfinity");
         return kCMTimeNegativeInfinity;
     }
-    
-    
+        
     // Convert to seconds using the time base
     double seconds = (double)ptsOrDts * av_q2d(timeBase);
     
