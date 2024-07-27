@@ -81,7 +81,7 @@
                                                      formatDescriptions:formats];
         
         // TODO: How to know if a stream is enabled?
-        // trackInfo.enabled = ??
+        trackInfo.enabled = true;
         
         // do this in place
         completionHandler(trackInfo, nil);
