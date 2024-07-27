@@ -19,7 +19,7 @@ struct ContentView: View {
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
-            Text("Hello, world!")
+            Text(String(self.asset.duration.seconds))
         }
         .padding()
     }
