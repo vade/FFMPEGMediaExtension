@@ -13,8 +13,9 @@ default    22:53:19.282955-0400    LibAVExtensionHost    <<< URLAsset >>> Ensure
 
 2. This seems to kick off the Byte Stream to a background process XPC after lots of other logs 
 
-`default    22:53:19.403251-0400    LibAVExtension    <<<< FigExtensionFoundationUtilities >>>> FigEXCopyExtensionList_block_invoke: MediaExtension format readers and video decoders enabled -- thank you for setting "ffctl CoreMedia/MediaExtensions=on"`
-
+```
+default    22:53:19.403251-0400    LibAVExtension    <<<< FigExtensionFoundationUtilities >>>> FigEXCopyExtensionList_block_invoke: MediaExtension format readers and video decoders enabled -- thank you for setting "ffctl CoreMedia/MediaExtensions=on"
+```
 
 3. This kicks off The Plugins registered factory
 
@@ -24,9 +25,12 @@ default    22:53:19.409717-0400    LibAVExtension    Initiaizing LibAVFormatRead
 ```
 
 4. This then kicks off file loading
-`default    22:53:19.412853-0400    LibAVExtension    loadFileInfoWithCompletionHandler`
 
-5. Which kicks off seeking in livavformats callbacks:
+```
+default    22:53:19.412853-0400    LibAVExtension    loadFileInfoWithCompletionHandler
+```
+
+6. We call `avformat_find_stream_info` which kicks off seeking in livavformats callbacks we registered :
 
 ```
 default    22:53:19.412916-0400    LibAVExtension    LibAVFormatReader got readPacket 4096 0x12e022400
@@ -45,11 +49,15 @@ default    22:53:19.426875-0400    LibAVExtension    LibAVFormatReader got readP
 
 6. This retuns the basic file info like duration
 
-`default    22:53:19.427272-0400    LibAVExtension    loadFileInfoWithCompletionHandler got duration: {61275000/1000000 = 61.275}`
+```
+default    22:53:19.427272-0400    LibAVExtension    loadFileInfoWithCompletionHandler got duration: {61275000/1000000 = 61.275}
+```
 
 7. We then try to load metadata:
 
-`default    22:53:19.427352-0400    LibAVExtension    loadMetadataWithCompletionHandler`
+```
+default    22:53:19.427352-0400    LibAVExtension    loadMetadataWithCompletionHandler
+```
 
 8. We then try to get track info:
 
@@ -85,7 +93,9 @@ default    22:53:19.803118-0400    LibAVExtensionHost    MediaRemote server init
 
 10. Back in our plugin, we get our first Sample Cursor Request
 
-`default    22:53:19.836405-0400    LibAVExtension    generateSampleCursorAtPresentationTimeStamp {0/1 = 0.000}`
+```
+default    22:53:19.836405-0400    LibAVExtension    generateSampleCursorAtPresentationTimeStamp {0/1 = 0.000}
+```
 
 This kicks off a ton of libavseeks thanks to our callbacks
 
