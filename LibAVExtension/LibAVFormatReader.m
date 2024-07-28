@@ -9,19 +9,41 @@
 #import "LibAVTrackReader.h"
 
 // Read callback
+//int readPacket(void *opaque, uint8_t *buf, int buf_size)
+//{
+//    LibAVFormatReader* formatReader = (__bridge LibAVFormatReader*) opaque;
+//
+//    // this causes overflow lol
+////    buf_size = FFMIN(buf_size, (int)[formatReader.byteSource fileLength]);
+//    
+//    size_t bytesRead = 0;
+//    
+//    NSLog(@"LibAVFormatReader got readPacket %i %p", buf_size, buf);
+//
+//    [formatReader.byteSource readDataOfLength:buf_size
+//                                   fromOffset:formatReader.currentReadOffset
+//                                toDestination:buf
+//                                    bytesRead:&bytesRead
+//                                        error:nil];
+//    
+//    formatReader.currentReadOffset += bytesRead;
+//    
+////    int64_t remaining = [formatReader.byteSource availableLengthAtOffset: formatReader.currentReadOffset];
+//    
+//    return buf_size;
+//}
+
 int readPacket(void *opaque, uint8_t *buf, int buf_size)
 {
     LibAVFormatReader* formatReader = (__bridge LibAVFormatReader*) opaque;
 
-    // this causes overflow lol
-//    buf_size = FFMIN(buf_size, (int)[formatReader.byteSource fileLength]);
     
     size_t bytesRead = 0;
     
     NSLog(@"LibAVFormatReader got readPacket %i %p", buf_size, buf);
 
     [formatReader.byteSource readDataOfLength:buf_size
-                                   fromOffset:formatReader.currentReadOffset
+                                   fromOffset:formatReader->avio_ctx->pos
                                 toDestination:buf
                                     bytesRead:&bytesRead
                                         error:nil];
