@@ -97,7 +97,7 @@ default    22:53:19.803118-0400    LibAVExtensionHost    MediaRemote server init
 default    22:53:19.836405-0400    LibAVExtension    generateSampleCursorAtPresentationTimeStamp {0/1 = 0.000}
 ```
 
-This kicks off a ton of libavseeks thanks to our callbacks
+This calls `av_seek_frame` which kicks off a ton of reads thanks to our callbacks
 
 ```
 default    22:53:19.836456-0400    LibAVExtension    Found Codec Type: 1635148593
@@ -119,7 +119,7 @@ default    22:53:19.849350-0400    LibAVExtension    sampleLocationReturningErro
 
 ```
 
-For some reason, we get
+For some reason, we get `kFigPartialSampleTableError_ParamErr`
 
 `error    22:53:19.849380-0400    LibAVExtension    <<<< FigPartialSampleTable >>>> fpst_writing_updateDecodeDurationIfNecessary signalled err=-17714 (kFigPartialSampleTableError_ParamErr) (invalid sample duration.) at FigPartialSampleTable.c:1099
 `
@@ -148,6 +148,7 @@ default    22:53:19.865959-0400    LibAVExtensionHost    <<<< AVAssetInspectorLo
 default    22:53:19.866048-0400    LibAVExtensionHost    <<<< FigFilePlayer >>>> itemfig_assetPropertyBatchLoaded: [0x141622000] P/OM current item 0x142858e00 I/ABF.01 became ready for inspection for the first time
 default    22:53:19.866071-0400    LibAVExtensionHost    <<<< FigFilePlayer >>>> itemfig_assetPropertyBatchLoaded: Prepare item <0x142858e00|I/ABF.01> on dispatch queue
 ```
+
 12. We then get another request for generateSampleCursorAtPresentationTimeStamp {0/1 = 0.000} where we return the sampleLocation
 
 ```
@@ -166,7 +167,7 @@ default    22:53:19.866944-0400    LibAVExtension    Duration {33/1000 = 0.033}
 default    22:53:19.866995-0400    LibAVExtension    sampleLocationReturningError
 ```
 
-13. We then get
+13. We then get the same `kFigPartialSampleTableError_ParamErr` error 
 
 ```
 error    22:53:19.867117-0400    LibAVExtension    <<<< FigPartialSampleTable >>>> fpst_writing_updateDecodeDurationIfNecessary signalled err=-17714 (kFigPartialSampleTableError_ParamErr) (invalid sample duration.) at FigPartialSampleTable.c:1099
