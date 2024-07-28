@@ -17,6 +17,7 @@
 		1BACCBDF2C52CFCA0018E44F /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBDE2C52CFB30018E44F /* libavcodec.a */; };
 		1BACCBE12C52CFE40018E44F /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBE02C52CFDA0018E44F /* libavformat.a */; };
 		1BB985EB2C5306FB005E59B7 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB985EA2C5306FB005E59B7 /* libavutil.a */; };
+		1BB986352C55EB09005E59B7 /* PLUGIN-NOTES.md in Resources */ = {isa = PBXBuildFile; fileRef = 1BB986342C55EB09005E59B7 /* PLUGIN-NOTES.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -72,6 +73,7 @@
 		1BACCBDE2C52CFB30018E44F /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ffmpeg/libavcodec/libavcodec.a; sourceTree = "<group>"; };
 		1BACCBE02C52CFDA0018E44F /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ffmpeg/libavformat/libavformat.a; sourceTree = "<group>"; };
 		1BB985EA2C5306FB005E59B7 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavutil.a; sourceTree = "<group>"; };
+		1BB986342C55EB09005E59B7 /* PLUGIN-NOTES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "PLUGIN-NOTES.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -134,6 +136,7 @@
 		1BACCB8C2C52ACBE0018E44F = {
 			isa = PBXGroup;
 			children = (
+				1BB986342C55EB09005E59B7 /* PLUGIN-NOTES.md */,
 				1BACCBD72C52B9940018E44F /* README.md */,
 				1BACCB972C52ACBE0018E44F /* LibAVExtensionHost */,
 				1BACCBA92C52ACBF0018E44F /* LibAVExtensionHostTests */,
@@ -341,6 +344,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1BACCBD82C52B9940018E44F /* README.md in Resources */,
+				1BB986352C55EB09005E59B7 /* PLUGIN-NOTES.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
