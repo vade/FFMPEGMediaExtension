@@ -21,7 +21,7 @@ default    22:53:19.282955-0400    LibAVExtensionHost    <<< URLAsset >>> Ensure
 ```
 default    22:53:19.409588-0400    LibAVExtension    objcWrapperPluginFormatReader_CreateInstance called
 default    22:53:19.409717-0400    LibAVExtension    Initiaizing LibAVFormatReader
-``
+```
 
 4. This then kicks off file loading
 `default    22:53:19.412853-0400    LibAVExtension    loadFileInfoWithCompletionHandler`
