@@ -195,6 +195,8 @@
         codecType = [self videoCodecTypeFromCodecID];
     }
     
+
+    
     NSLog(@"Found Codec Type: %i", codecType);
 
     // Create video format description
@@ -202,7 +204,7 @@
                                                      codecType,
                                                      self->stream->codecpar->width,
                                                      self->stream->codecpar->height,
-                                                     NULL,  // Optional extensions
+                                                     [self createExtraDataForCodecType:codecType],  // Optional extensions
                                                      &formatDescription);
     
     if (status != noErr)
@@ -212,6 +214,32 @@
     }
         
     return formatDescription;
+}
+
+- (nullable CFDictionaryRef) createExtraDataForCodecType:(CMVideoCodecType)codecType
+{
+    switch (codecType)
+    {
+        case kCMVideoCodecType_H264:
+            return [self createH264ExtraData];
+            
+        default:
+            return NULL;
+    }
+}
+
+- (nullable CFDictionaryRef) createH264ExtraData
+{
+    uint8_t *extradata = self->stream->codecpar->extradata;
+    int extradata_size = self->stream->codecpar->extradata_size;
+        
+    
+    return extradata_size ? (__bridge CFDictionaryRef)@{
+        (__bridge NSString *)kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms: @{
+            @"avcC": [NSData dataWithBytes:extradata length:extradata_size]
+        }
+    } : NULL ;
+
 }
 
 - (nullable CMFormatDescriptionRef) audioFormatDescription
