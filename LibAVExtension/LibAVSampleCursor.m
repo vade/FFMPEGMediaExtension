@@ -192,15 +192,17 @@
             completionHandler(0, nil);
             return;
         }
+        
+        // If we are asked to step backwards, we actually have to seekd
+        CMTime targetTime = [self estimateTargetTimeUsingCurrentDurationForSteps:stepCount relativeToReferenceTime:self.presentationTimeStamp];
+        
+        NSLog(@"stepInPresentationOrderByCount: %lli - esimated target time: %@", stepCount, CMTimeCopyDescription(kCFAllocatorDefault, targetTime));
+
+        [self seekToPTS:targetTime];
+
     }
     
-    // Determine the direction
-    CMTime targetTime = [self estimateTargetTimeUsingCurrentDurationForSteps:stepCount relativeToReferenceTime:self.presentationTimeStamp];
-    
-    NSLog(@"stepInPresentationOrderByCount: %lli - esimated target time: %@", stepCount, CMTimeCopyDescription(kCFAllocatorDefault, targetTime));
-
-//    [self seekToPTS:targetTime];
-    
+   
     int64_t framesStepped = 0;
 
     AVPacket packet;
@@ -235,26 +237,26 @@
 
 // MARK: - Sample Location & Delivery
 
-//-(BOOL)samplesWithEarlierDTSsMayHaveLaterPTSsThanCursor:(id<MESampleCursor>)cursor
-//
-//{
-//    return YES;
-//}
-//
-//-(BOOL)samplesWithLaterDTSsMayHaveEarlierPTSsThanCursor:(id<MESampleCursor>)cursor
-//{
-//    return YES;
-//}
+-(BOOL)samplesWithEarlierDTSsMayHaveLaterPTSsThanCursor:(id<MESampleCursor>)cursor
+
+{
+    return YES;
+}
+
+-(BOOL)samplesWithLaterDTSsMayHaveEarlierPTSsThanCursor:(id<MESampleCursor>)cursor
+{
+    return YES;
+}
 
 - (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 {
  
-//    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
-//    {
-//        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
-//        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
-//        return NULL;
-//    }
+    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
+    {
+        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
+        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
+        return NULL;
+    }
     
     NSLog(@"sampleLocationReturningError");
 
@@ -270,12 +272,12 @@
 - (MESampleCursorChunk * _Nullable) chunkDetailsReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 {
 
-//    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
-//    {
-//        NSLog(@"chunkDetailsReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
-//        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
-//        return NULL;
-//    }
+    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
+    {
+        NSLog(@"chunkDetailsReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
+        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
+        return NULL;
+    }
 
     NSLog(@"chunkDetailsReturningError");
 
@@ -322,6 +324,8 @@
 // TODO: - Confirm Seek is generally PTS based?
 - (int) seekToPTS:(CMTime)time
 {
+    [self udpateOffsetUsingCurrentFilePosition];
+    
     if (CMTIME_COMPARE_INLINE(time, ==, self.presentationTimeStamp))
     {
         return 1;
@@ -329,10 +333,12 @@
     
     CMTime timeInStreamUnits = CMTimeConvertScale(time, self.trackReader->stream->time_base.den, kCMTimeRoundingMethod_Default);
     
+    int flags = ( CMTIME_COMPARE_INLINE(self.currentSampleDuration, >=, time) ) ?  0 : AVSEEK_FLAG_BACKWARD;
+    
     return av_seek_frame(self.trackReader.formatReader->format_ctx,
                          self.trackReader.streamIndex - 1,
                          timeInStreamUnits.value,
-                         AVSEEK_FLAG_BACKWARD);
+                         flags);
 }
 
 // Reference time should be PTS or DTS - step count
@@ -347,7 +353,13 @@
     return CMTimeAdd(referenceTime, stepCountAsCMTime);
 }
 
+// Use this before reading
+- (void) udpateOffsetUsingCurrentFilePosition
+{
+    self.sampleOffset = avio_tell(self.trackReader.formatReader->format_ctx->pb); ///packet->pos;
+}
 
+// Use this after we reading vents a packet
 - (void) updateStateForPacket:(const AVPacket*)packet
 {
     // Update currentDTS based on the packet's DTS
@@ -355,7 +367,7 @@
     self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
     self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
     
-    // We have have gotten some bad time stamps above
+    // We may have gotten some bad time stamps above
     
     // FFMPEG will more likely give us valid PTS than DTS
     // So lets compare DTS - if its invalid, check PTS and assign
@@ -368,12 +380,10 @@
         }
     }
     
-    
     self.syncInfo = [self extractSyncInfoFrom:packet];
     self.currentSampleDependencyInfo = [self extractDependencyInfoFromPacket:packet codecParameters:self.trackReader->stream->codecpar];
     
     self.sampleSize = packet->size;
-    self.sampleOffset = packet->pos;
     
     NSLog(@"Decode Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));
     NSLog(@"Presentation Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
@@ -474,27 +484,27 @@
     BOOL isKeyframe = packet->flags & AV_PKT_FLAG_KEY;
     
     // Determine if the sample depends on others
-//    depInfo.sampleIndicatesWhetherItDependsOnOthers = YES;
-//    depInfo.sampleDependsOnOthers = !isKeyframe; // Keyframes don't depend on others
-//
-//    // Determine if there are dependent samples
-//    depInfo.sampleIndicatesWhetherItHasDependentSamples = YES;
-//    depInfo.sampleHasDependentSamples = isKeyframe; // Keyframes typically have dependents
-//
-//    // Redundant coding is codec-specific and often not directly exposed in FFmpeg
-//    depInfo.sampleIndicatesWhetherItHasRedundantCoding = NO;
-//    depInfo.sampleHasRedundantCoding = NO; // Defaulting to NO, this would require codec-specific logic
-
-    depInfo.sampleIndicatesWhetherItDependsOnOthers = NO;
-    depInfo.sampleDependsOnOthers = NO; // Keyframes don't depend on others
+    depInfo.sampleIndicatesWhetherItDependsOnOthers = YES;
+    depInfo.sampleDependsOnOthers = !isKeyframe; // Keyframes don't depend on others
 
     // Determine if there are dependent samples
-    depInfo.sampleIndicatesWhetherItHasDependentSamples = NO;
-    depInfo.sampleHasDependentSamples = NO; // Keyframes typically have dependents
+    depInfo.sampleIndicatesWhetherItHasDependentSamples = YES;
+    depInfo.sampleHasDependentSamples = isKeyframe; // Keyframes typically have dependents
 
     // Redundant coding is codec-specific and often not directly exposed in FFmpeg
     depInfo.sampleIndicatesWhetherItHasRedundantCoding = NO;
-    depInfo.sampleHasRedundantCoding = NO; // Defaulting to NO, th
+    depInfo.sampleHasRedundantCoding = NO; // Defaulting to NO, this would require codec-specific logic
+
+//    depInfo.sampleIndicatesWhetherItDependsOnOthers = NO;
+//    depInfo.sampleDependsOnOthers = NO; // Keyframes don't depend on others
+//
+//    // Determine if there are dependent samples
+//    depInfo.sampleIndicatesWhetherItHasDependentSamples = NO;
+//    depInfo.sampleHasDependentSamples = NO; // Keyframes typically have dependents
+//
+//    // Redundant coding is codec-specific and often not directly exposed in FFmpeg
+//    depInfo.sampleIndicatesWhetherItHasRedundantCoding = NO;
+//    depInfo.sampleHasRedundantCoding = NO; // Defaulting to NO, th
     return depInfo;
 }
 @end
