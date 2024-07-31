@@ -8,6 +8,14 @@
 #import "LibAVFormatReader.h"
 #import "LibAVTrackReader.h"
 
+@interface LibAVFormatReader ()
+
+@property (readwrite, assign) CMTime duration;
+@property (readwrite, assign) size_t currentReadOffset;
+//@property (readwrite, retain) dispatch_queue_t completionQueue;
+@property (readwrite, retain) MEByteSource* byteSource;
+
+@end
 
 
 int readPacket(void *opaque, uint8_t *buf, int buf_size)
@@ -16,15 +24,16 @@ int readPacket(void *opaque, uint8_t *buf, int buf_size)
     
     size_t bytesRead = 0;
     
-    NSLog(@"LibAVFormatReader got readPacket %i %p", buf_size, buf);
-
-    [formatReader.byteSource readDataOfLength:buf_size
-                                   fromOffset:formatReader->avio_ctx->pos
-                                toDestination:buf
-                                    bytesRead:&bytesRead
-                                        error:nil];
     
-    formatReader.currentReadOffset = formatReader->avio_ctx->pos;
+    BOOL readResult = [formatReader.byteSource readDataOfLength:buf_size
+                                                     fromOffset:formatReader.currentReadOffset
+                                                  toDestination:buf
+                                                      bytesRead:&bytesRead
+                                                          error:nil];
+
+    NSLog(@"LibAVFormatReader got readPacket Success: %i fromOffset: %zu, size: %i", readResult, formatReader.currentReadOffset, buf_size);
+
+    formatReader.currentReadOffset = avio_tell(formatReader->format_ctx->pb);
         
     return bytesRead;
 }
@@ -49,6 +58,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     }
     return 0;
 }
+
 
 
 @implementation LibAVFormatReader
@@ -98,7 +108,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 
     LibAVFormatReader* strongSelf = self;
 
-        NSLog(@"loadFileInfoWithCompletionHandler");
+        NSLog(@"LibAVFormatReader loadFileInfoWithCompletionHandler");
         MEFileInfo* fileInfo = [[MEFileInfo alloc] init];
         
         strongSelf->format_ctx = avformat_alloc_context();
@@ -113,16 +123,18 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         if (avformat_open_input(&(strongSelf->format_ctx), NULL, NULL, NULL) < 0)
         {
             // Handle error
-            NSLog(@"loadFileInfoWithCompletionHandler unable to open input");
+            NSLog(@"LibAVFormatReader loadFileInfoWithCompletionHandler unable to open input");
 
         }
         
         avformat_find_stream_info(self->format_ctx, NULL);
         
-        fileInfo.duration = CMTimeMake(self->format_ctx->duration, AV_TIME_BASE);
+        self.duration = CMTimeMake(self->format_ctx->duration, AV_TIME_BASE);
+    
+        fileInfo.duration = self.duration;
         fileInfo.fragmentsStatus = MEFileInfoCouldNotContainFragments;
         
-        NSLog(@"loadFileInfoWithCompletionHandler got duration: %@", CMTimeCopyDescription(kCFAllocatorDefault, fileInfo.duration) );
+        NSLog(@"LibAVFormatReader loadFileInfoWithCompletionHandler got duration: %@", CMTimeCopyDescription(kCFAllocatorDefault, fileInfo.duration) );
 
         completionHandler(fileInfo, nil);
 //    });

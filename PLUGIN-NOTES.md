@@ -183,4 +183,223 @@ default    22:53:19.867260-0400    LibAVExtension    generateSampleCursorAtPrese
 
 ```
 
+- (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler {
+    AVFormatContext *formatContext = self.formatContext; // Assume this is set up
+    AVStream *stream = formatContext->streams[self.streamIndex]; // Assume you're tracking the correct stream index
+    AVPacket packet;
+    
+    // Read packets until we reach the desired sample
+    while (av_read_frame(formatContext, &packet) >= 0) {
+        if (packet.stream_index == self.streamIndex) {
+            CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVPacket:&packet forStream:stream];
+            if (sampleBuffer) {
+                completionHandler(sampleBuffer, nil);
+                CFRelease(sampleBuffer); // Balance the creation
+                av_packet_unref(&packet);
+                return;
+            }
+        }
+        av_packet_unref(&packet);
+    }
+    
+    // If we get here, we didn't find a valid packet
+    completionHandler(NULL, [NSError errorWithDomain:@"SampleCursorError" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"No valid packet found"}]);
+}
 
+- (CMSampleBufferRef)createSampleBufferFromAVPacket:(AVPacket *)packet forStream:(AVStream *)stream {
+    CMSampleBufferRef sampleBuffer = NULL;
+    
+    // Create a CMBlockBuffer from the packet data
+    CMBlockBufferRef blockBuffer = NULL;
+    OSStatus status = CMBlockBufferCreateWithMemoryBlock(
+        kCFAllocatorDefault,
+        (void *)packet->data,
+        packet->size,
+        kCFAllocatorNull,
+        NULL,
+        0,
+        packet->size,
+        0,
+        &blockBuffer
+    );
+    
+    if (status != kCMBlockBufferNoErr) {
+        NSLog(@"Failed to create CMBlockBuffer");
+        return NULL;
+    }
+    
+    // Create the sample buffer format description
+    CMFormatDescriptionRef formatDescription = NULL;
+    uint8_t *extradata = stream->codecpar->extradata;
+    int extradata_size = stream->codecpar->extradata_size;
+    
+    if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+        status = CMVideoFormatDescriptionCreate(
+            kCFAllocatorDefault,
+            stream->codecpar->codec_id == AV_CODEC_ID_H264 ? kCMVideoCodecType_H264 : kCMVideoCodecType_HEVC,
+            stream->codecpar->width,
+            stream->codecpar->height,
+            extradata_size ? (__bridge CFDictionaryRef)@{
+                (__bridge NSString *)kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms: @{
+                    @"avcC": [NSData dataWithBytes:extradata length:extradata_size]
+                }
+            } : NULL,
+            &formatDescription
+        );
+    } else if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+        AudioStreamBasicDescription asbd = {0};
+        asbd.mSampleRate = stream->codecpar->sample_rate;
+        asbd.mFormatID = kAudioFormatMPEG4AAC; // Adjust based on your codec
+        asbd.mChannelsPerFrame = stream->codecpar->channels;
+        
+        status = CMAudioFormatDescriptionCreate(
+            kCFAllocatorDefault,
+            &asbd,
+            extradata_size,
+            extradata,
+            0,
+            NULL,
+            NULL,
+            &formatDescription
+        );
+    }
+    
+    if (status != noErr) {
+        NSLog(@"Failed to create format description");
+        CFRelease(blockBuffer);
+        return NULL;
+    }
+    
+    // Create the sample timing info
+    CMSampleTimingInfo timingInfo;
+    timingInfo.duration = CMTimeMake(packet->duration, stream->time_base.den);
+    timingInfo.presentationTimeStamp = CMTimeMake(packet->pts, stream->time_base.den);
+    timingInfo.decodeTimeStamp = CMTimeMake(packet->dts, stream->time_base.den);
+    
+    // Create the sample buffer
+    status = CMSampleBufferCreate(
+        kCFAllocatorDefault,
+        blockBuffer,
+        TRUE,
+        NULL,
+        NULL,
+        formatDescription,
+        1,
+        1,
+        &timingInfo,
+        0,
+        NULL,
+        &sampleBuffer
+    );
+    
+    CFRelease(blockBuffer);
+    CFRelease(formatDescription);
+    
+    if (status != noErr) {
+        NSLog(@"Failed to create sample buffer");
+        return NULL;
+    }
+    
+    return sampleBuffer;
+}
+
+
+
+
+
+
+- (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler {
+    AVFormatContext *formatContext = self.formatContext; // Assume this is set up
+    AVCodecContext *codecContext = self.codecContext; // Assume this is set up
+    AVPacket packet;
+    AVFrame *frame = av_frame_alloc();
+    
+    // Read packets until we reach the desired sample
+    while (av_read_frame(formatContext, &packet) >= 0) {
+        if (packet.stream_index == self.videoStreamIndex) { // Assume you're tracking the correct stream index
+            int response = avcodec_send_packet(codecContext, &packet);
+            if (response < 0) {
+                // Handle error
+                completionHandler(NULL, [NSError errorWithDomain:@"AVCodecError" code:response userInfo:nil]);
+                return;
+            }
+            
+            while (response >= 0) {
+                response = avcodec_receive_frame(codecContext, frame);
+                if (response == AVERROR(EAGAIN) || response == AVERROR_EOF) {
+                    break;
+                } else if (response < 0) {
+                    // Handle error
+                    completionHandler(NULL, [NSError errorWithDomain:@"AVCodecError" code:response userInfo:nil]);
+                    return;
+                }
+                
+                // We have a decoded frame, now create a CMSampleBuffer
+                CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVFrame:frame];
+                if (sampleBuffer) {
+                    completionHandler(sampleBuffer, nil);
+                    CFRelease(sampleBuffer); // Balance the creation
+                    av_frame_unref(frame);
+                    av_packet_unref(&packet);
+                    av_frame_free(&frame);
+                    return;
+                }
+            }
+        }
+        av_packet_unref(&packet);
+    }
+    
+    // If we get here, we didn't find a valid frame
+    completionHandler(NULL, [NSError errorWithDomain:@"SampleCursorError" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"No valid frame found"}]);
+    av_frame_free(&frame);
+}
+
+- (CMSampleBufferRef)createSampleBufferFromAVFrame:(AVFrame *)frame {
+    // Create a CVPixelBuffer from the AVFrame
+    CVPixelBufferRef pixelBuffer = NULL;
+    OSStatus status = CVPixelBufferCreate(kCFAllocatorDefault,
+                                          frame->width,
+                                          frame->height,
+                                          kCVPixelFormatType_32BGRA, // Adjust based on your needs
+                                          NULL,
+                                          &pixelBuffer);
+    if (status != kCVReturnSuccess) {
+        return NULL;
+    }
+    
+    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+    
+    // Copy frame data to pixel buffer
+    uint8_t *dst = CVPixelBufferGetBaseAddress(pixelBuffer);
+    int dstStride = CVPixelBufferGetBytesPerRow(pixelBuffer);
+    
+    // You may need to use sws_scale here to convert from frame->format to BGRA
+    // For simplicity, let's assume the frame is already in the correct format
+    for (int i = 0; i < frame->height; i++) {
+        memcpy(dst + i * dstStride, frame->data[0] + i * frame->linesize[0], frame->width * 4);
+    }
+    
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+    
+    // Create CMSampleBuffer
+    CMSampleBufferRef sampleBuffer = NULL;
+    CMVideoFormatDescriptionRef videoInfo = NULL;
+    status = CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &videoInfo);
+    
+    CMTime frameTime = CMTimeMake(frame->pts, codecContext->time_base.den);
+    CMSampleTimingInfo timing = {CMTimeMake(frame->duration, codecContext->time_base.den), frameTime, frameTime};
+    
+    status = CMSampleBufferCreateForImageBuffer(kCFAllocatorDefault,
+                                                pixelBuffer,
+                                                true,
+                                                NULL,
+                                                NULL,
+                                                videoInfo,
+                                                &timing,
+                                                &sampleBuffer);
+    
+    CFRelease(videoInfo);
+    CVPixelBufferRelease(pixelBuffer);
+    
+    return sampleBuffer;
+}

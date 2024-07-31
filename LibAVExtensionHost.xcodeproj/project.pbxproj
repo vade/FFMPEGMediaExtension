@@ -81,6 +81,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				LibAVSampleCursor_old.m,
 			);
 			target = 1BACCBC62C52AE1D0018E44F /* LibAVExtension */;
 		};

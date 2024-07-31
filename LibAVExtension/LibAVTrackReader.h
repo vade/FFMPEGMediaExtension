@@ -26,9 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 @property (readonly, strong) LibAVFormatReader* formatReader;
-@property (readonly, assign) NSUInteger streamIndex;
+@property (readonly, assign) int streamIndex;
 
-- (instancetype) initWithFormatReader:(LibAVFormatReader*)formatReader stream:(AVStream*)stream atIndex:(NSUInteger)index;
+- (instancetype) initWithFormatReader:(LibAVFormatReader*)formatReader stream:(AVStream*)stream atIndex:(int)index;
 - (nullable CMFormatDescriptionRef) formatDescription;
 
 @end

@@ -14,6 +14,7 @@
 #import <libavutil/file.h>
 
 #import <dispatch/dispatch.h>
+#import <CoreMedia/CoreMedia.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,9 +29,11 @@ NS_ASSUME_NONNULL_BEGIN
     uint8_t *avio_ctx_buffer;
     
 }
-@property (readwrite, assign) size_t currentReadOffset;
+
+@property (readonly, assign) CMTime duration;
+@property (readonly, assign) size_t currentReadOffset;
 //@property (readwrite, retain) dispatch_queue_t completionQueue;
-@property (readwrite, retain) MEByteSource* byteSource;
+@property (readonly, retain) MEByteSource* byteSource;
 
 - (instancetype) initWithByteSource:(MEByteSource*)byteSource;
 

@@ -12,12 +12,12 @@
 
 @interface LibAVTrackReader ()
 @property (readwrite, strong) LibAVFormatReader* formatReader;
-@property (readwrite, assign) NSUInteger streamIndex;
+@property (readwrite, assign) int streamIndex;
 @end
 
 @implementation LibAVTrackReader
 
-- (instancetype) initWithFormatReader:(LibAVFormatReader*)formatReader stream:(AVStream*)stream atIndex:(NSUInteger)index;
+- (instancetype) initWithFormatReader:(LibAVFormatReader*)formatReader stream:(AVStream*)stream atIndex:(int)index;
 {
     self = [super init];
     if (self != nil)
@@ -34,7 +34,7 @@
 
 - (void)generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
 {
-    NSLog(@"generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler");
+    NSLog(@"LibAVTrackReader generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler");
     
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     [sampleCursor seekToBeginningOfFile];
@@ -44,30 +44,30 @@
 
 - (void)generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
 {
-    NSLog(@"generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler");
+    NSLog(@"LibAVTrackReader generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler");
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     [sampleCursor seekToEndOfFile];
-
     
     completionHandler(sampleCursor, nil);
 }
 
 - (void)generateSampleCursorAtPresentationTimeStamp:(CMTime)presentationTimeStamp completionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
 {
-    NSLog(@"generateSampleCursorAtPresentationTimeStamp %@", CMTimeCopyDescription(kCFAllocatorDefault, presentationTimeStamp));
+    NSLog(@"LibAVTrackReader generateSampleCursorAtPresentationTimeStamp %@", CMTimeCopyDescription(kCFAllocatorDefault, presentationTimeStamp));
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
     
     [sampleCursor seekToPTS:presentationTimeStamp];
     
     completionHandler(sampleCursor, nil);
-
 }
 
 
 - (void)loadTrackInfoWithCompletionHandler:(nonnull void (^)(METrackInfo * _Nullable, NSError * _Nullable))completionHandler {
     
+    NSLog(@"LibAVTrackReader loadTrackInfoWithCompletionHandler");
+
     CMFormatDescriptionRef format = [self formatDescription];
     
     if (format != NULL)
@@ -124,12 +124,15 @@
     }
 }
 
+// MARK: - CMFormatDescription
+
 - (nullable CMFormatDescriptionRef) formatDescription
 {
     switch (self->stream->codecpar->codec_type)
     {
         case AVMEDIA_TYPE_UNKNOWN:
             return NULL;
+            
         case AVMEDIA_TYPE_VIDEO:
             return [self videoFormatDescription];
 
@@ -150,44 +153,11 @@
     }
 }
 
-// BARF
-- (CMVideoCodecType) videoCodecTypeFromCodecID
-{
-    switch (self->stream->codecpar->codec_id)
-    {
-        case AV_CODEC_ID_H264:
-            return kCMVideoCodecType_H264;
-            
-        default:
-            return -1;
-    }
-}
-
-// BARF
-
-- (AudioFormatID) audioFormatFromCodecID
-{
-    
-    switch (self->stream->codecpar->codec_id)
-    {
-        case AV_CODEC_ID_AAC:
-            return kAudioFormatMPEG4AAC;
-            
-        case AV_CODEC_ID_AC3:
-            return kAudioFormatAC3;
-
-        case AV_CODEC_ID_EAC3:
-            return kAudioFormatEnhancedAC3;
-
-        default:
-            return -1;
-    }
-}
-
 - (nullable CMFormatDescriptionRef) videoFormatDescription
 {
     CMFormatDescriptionRef formatDescription = NULL;
 
+    // FourCC
     CMVideoCodecType codecType = (CMVideoCodecType) self->stream->codecpar->codec_tag;
 
     if (codecType == 0)
@@ -195,16 +165,15 @@
         codecType = [self videoCodecTypeFromCodecID];
     }
     
-
-    
-    NSLog(@"Found Codec Type: %i", codecType);
+    NSLog(@"LibAVTrackReader videoFormatDescription Found Codec Type: %i", codecType);
 
     // Create video format description
     OSStatus status = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
                                                      codecType,
                                                      self->stream->codecpar->width,
                                                      self->stream->codecpar->height,
-                                                     [self createExtraDataForCodecType:codecType],  // Optional extensions
+                                                     // Optional extensions
+                                                     [self createExtraDataForCodecType:codecType],
                                                      &formatDescription);
     
     if (status != noErr)
@@ -216,38 +185,10 @@
     return formatDescription;
 }
 
-- (nullable CFDictionaryRef) createExtraDataForCodecType:(CMVideoCodecType)codecType
-{
-    switch (codecType)
-    {
-        case kCMVideoCodecType_H264:
-            return [self createH264ExtraData];
-            
-        default:
-            return NULL;
-    }
-}
-
-- (nullable CFDictionaryRef) createH264ExtraData
-{
-    uint8_t *extradata = self->stream->codecpar->extradata;
-    int extradata_size = self->stream->codecpar->extradata_size;
-        
-    
-    return extradata_size ? (__bridge CFDictionaryRef)@{
-        (__bridge NSString *)kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms: @{
-            @"avcC": [NSData dataWithBytes:extradata length:extradata_size]
-        }
-    } : NULL ;
-
-}
-
 - (nullable CMFormatDescriptionRef) audioFormatDescription
 {
     CMAudioFormatDescriptionRef audioFormatDescription = NULL;
     
-    
-    NSLog(@"determinging audio format, %i", self->stream->codecpar->codec_id);
 
     AudioFormatID audioFormatID = (AudioFormatID)self->stream->codecpar->codec_tag;
 //    if (audioFormatID == 0)
@@ -255,7 +196,8 @@
         audioFormatID = [self audioFormatFromCodecID];
 //    }
 
-    
+    NSLog(@"LibAVTrackReader audioFormatDescription Found Codec Type: %i", audioFormatID);
+
     AudioStreamBasicDescription asbd = {0};
     asbd.mSampleRate = self->stream->codecpar->sample_rate;
     asbd.mChannelsPerFrame = self->stream->codecpar->ch_layout.nb_channels;
@@ -344,5 +286,70 @@
     
     return audioFormatDescription;
 }
+
+// MARK: - CMFormatDescription Helpers
+
+// BARF
+- (CMVideoCodecType) videoCodecTypeFromCodecID
+{
+    switch (self->stream->codecpar->codec_id)
+    {
+        case AV_CODEC_ID_H264:
+            return kCMVideoCodecType_H264;
+            
+        default:
+            return -1;
+    }
+}
+
+// BARF
+- (AudioFormatID) audioFormatFromCodecID
+{
+    switch (self->stream->codecpar->codec_id)
+    {
+        case AV_CODEC_ID_AAC:
+            return kAudioFormatMPEG4AAC;
+            
+        case AV_CODEC_ID_AC3:
+            return kAudioFormatAC3;
+
+        case AV_CODEC_ID_EAC3:
+            return kAudioFormatEnhancedAC3;
+
+        default:
+            return -1;
+    }
+}
+
+// MARK: - CMFormatDescription Extra Data
+
+- (nullable CFDictionaryRef) createExtraDataForCodecType:(CMVideoCodecType)codecType
+{
+    
+    switch (codecType)
+    {
+//        case kCMVideoCodecType_H264:
+//            return [self createH264ExtraData];
+            
+        default:
+            return NULL;
+    }
+}
+
+// No idea!
+- (nullable CFDictionaryRef) createH264ExtraData
+{
+    uint8_t *extradata = self->stream->codecpar->extradata;
+    int extradata_size = self->stream->codecpar->extradata_size;
+    
+    return extradata_size ? (__bridge CFDictionaryRef)@{
+        (__bridge NSString *)kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms: @{
+            @"avcC": [NSData dataWithBytes:extradata length:extradata_size]
+        }
+    } : NULL ;
+
+}
+
+
 
 @end

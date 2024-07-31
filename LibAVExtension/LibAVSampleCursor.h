@@ -30,10 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader;
 
-- (int) seekToPTS:(CMTime)time;
-
 - (void) seekToBeginningOfFile;
 - (void) seekToEndOfFile;
+- (int) seekToPTS:(CMTime)time;
 
 @end
 
