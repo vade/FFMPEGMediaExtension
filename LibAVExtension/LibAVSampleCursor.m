@@ -223,25 +223,25 @@ typedef struct  {
 //    return YES;
 //}
 
-//- (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
-//{
-//    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
-//    {
-//        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
-//        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
-//        return NULL;
-//    }
-//    
-//    NSLog(@"sampleLocationReturningError");
-//
-//    AVSampleCursorStorageRange range;
-//    range.offset = self.sampleOffset;
-//    range.length = self.sampleSize;
-//    
-//    MESampleLocation* location = [[MESampleLocation alloc] initWithByteSource:self.trackReader.formatReader.byteSource sampleLocation:range];
-//    
-//    return location;
-//}
+- (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
+{
+    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
+    {
+        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
+        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
+        return NULL;
+    }
+    
+    NSLog(@"sampleLocationReturningError");
+
+    AVSampleCursorStorageRange range;
+    range.offset = self.sampleOffset;
+    range.length = self.sampleSize;
+    
+    MESampleLocation* location = [[MESampleLocation alloc] initWithByteSource:self.trackReader.formatReader.byteSource sampleLocation:range];
+    
+    return location;
+}
 //
 //- (MESampleCursorChunk * _Nullable) chunkDetailsReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 //{
@@ -272,35 +272,35 @@ typedef struct  {
 //    return chunk;
 //}
 
-// Lets try a new strategy - simply implement this method and provide fully decoded frames to Core Media?
-- (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler
-{
-    NSLog(@"LibAVSampleCursor: loadSampleBufferContainingSamplesToEndCursor endCursor%@", endSampleCursor);
-
-        // This is probably wrong, since we are frame stepping again
-    // but lets just see whats what
-//    AVPacket packet;
-//    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0)
-//    {
-//        if ( packet.stream_index == self.trackReader.streamIndex - 1 )
-//        {
+//// Lets try a new strategy - simply implement this method and provide fully decoded frames to Core Media?
+//- (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler
+//{
+//    NSLog(@"LibAVSampleCursor: loadSampleBufferContainingSamplesToEndCursor endCursor%@", endSampleCursor);
 //
-//            [self updateStateForPacket:&packet];
-
-    const AVPacket* packet = [self copyNextAVPacket];
-    CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVPacketWithoutDecoding:packet];
-
-//    av_packet_free(&packet);
-    
-            NSLog(@"LibAVSampleCursor: loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", sampleBuffer);
-
-            completionHandler(sampleBuffer, nil);
-//        }
-
-//        av_packet_unref(&packet);
-//    }
-
-}
+//        // This is probably wrong, since we are frame stepping again
+//    // but lets just see whats what
+////    AVPacket packet;
+////    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0)
+////    {
+////        if ( packet.stream_index == self.trackReader.streamIndex - 1 )
+////        {
+////
+////            [self updateStateForPacket:&packet];
+//
+//    const AVPacket* packet = [self copyNextAVPacket];
+//    CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVPacketWithoutDecoding:packet];
+//
+////    av_packet_free(&packet);
+//    
+//            NSLog(@"LibAVSampleCursor: loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", sampleBuffer);
+//
+//            completionHandler(sampleBuffer, nil);
+////        }
+//
+////        av_packet_unref(&packet);
+////    }
+//
+//}
 
 // MARK: - NO PROTOCOL REQUIREMENTS BELOW -
 
@@ -474,7 +474,7 @@ typedef struct  {
     {
         if ( packet.stream_index == self.trackReader.streamIndex - 1 )
         {
-            [self updateOffsetUsingCurrentFilePosition];
+//            [self updateOffsetUsingCurrentFilePosition];
 
             [self updateStateForPacket:&packet];
             
@@ -503,7 +503,7 @@ typedef struct  {
    {
        if (packet->stream_index == self.trackReader.streamIndex - 1)
        {
-           [self updateOffsetUsingCurrentFilePosition];
+//           [self updateOffsetUsingCurrentFilePosition];
            [self updateStateForPacket:packet];
 
            return packet;
@@ -552,6 +552,9 @@ typedef struct  {
     self.currentSampleDependencyInfo = [self extractDependencyInfoFromPacket:packet codecParameters:self.trackReader->stream->codecpar];
     
     self.sampleSize = packet->size;
+    
+    self.sampleOffset = avio_tell(self.trackReader.formatReader->format_ctx->pb) - self.sampleSize;
+    
     
     NSLog(@"LibAVSampleCursor updateStateForPacket Presentation Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
     NSLog(@"LibAVSampleCursor updateStateForPacket Decode Timestamp %@", CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));

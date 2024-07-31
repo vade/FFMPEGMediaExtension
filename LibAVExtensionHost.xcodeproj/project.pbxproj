@@ -16,6 +16,23 @@
 		1BACCBD82C52B9940018E44F /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 1BACCBD72C52B9940018E44F /* README.md */; };
 		1BACCBDF2C52CFCA0018E44F /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBDE2C52CFB30018E44F /* libavcodec.a */; };
 		1BACCBE12C52CFE40018E44F /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBE02C52CFDA0018E44F /* libavformat.a */; };
+		1BB0877F2C5B025C00758AE1 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB985EA2C5306FB005E59B7 /* libavutil.a */; };
+		1BB087802C5B025C00758AE1 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC247B2C5300630018E44F /* libiconv.tbd */; };
+		1BB087812C5B025C00758AE1 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24792C5300380018E44F /* libbz2.tbd */; };
+		1BB087822C5B025C00758AE1 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24772C52FFFC0018E44F /* libz.tbd */; };
+		1BB087832C5B025C00758AE1 /* libcorecrypto.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24712C52FF960018E44F /* libcorecrypto.tbd */; };
+		1BB087842C5B025C00758AE1 /* libcommonCrypto.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BAC24722C52FF960018E44F /* libcommonCrypto.tbd */; };
+		1BB087852C5B025C00758AE1 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBDE2C52CFB30018E44F /* libavcodec.a */; };
+		1BB087862C5B025C00758AE1 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BACCBE02C52CFDA0018E44F /* libavformat.a */; };
+		1BB087882C5B031A00758AE1 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB087872C5B031A00758AE1 /* CoreMedia.framework */; };
+		1BB0878A2C5B031F00758AE1 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB087892C5B031F00758AE1 /* AVFoundation.framework */; };
+		1BB0878C2C5B032C00758AE1 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB0878B2C5B032C00758AE1 /* VideoToolbox.framework */; };
+		1BB0878F2C5B033500758AE1 /* MediaToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB0878D2C5B033500758AE1 /* MediaToolbox.framework */; };
+		1BB087902C5B033500758AE1 /* MediaExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB0878E2C5B033500758AE1 /* MediaExtension.framework */; };
+		1BB087922C5B034600758AE1 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB087912C5B034600758AE1 /* CoreAudio.framework */; };
+		1BB087962C5B036A00758AE1 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB087952C5B036A00758AE1 /* CoreVideo.framework */; };
+		1BB087992C5B037500758AE1 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB087972C5B037500758AE1 /* AudioUnit.framework */; };
+		1BB0879A2C5B037500758AE1 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB087982C5B037500758AE1 /* AudioToolbox.framework */; };
 		1BB985EB2C5306FB005E59B7 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BB985EA2C5306FB005E59B7 /* libavutil.a */; };
 		1BB986352C55EB09005E59B7 /* PLUGIN-NOTES.md in Resources */ = {isa = PBXBuildFile; fileRef = 1BB986342C55EB09005E59B7 /* PLUGIN-NOTES.md */; };
 /* End PBXBuildFile section */
@@ -45,6 +62,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		1B60C49B2C5B01E800758EE3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		1BACCBD42C52AE1D0018E44F /* Embed ExtensionKit Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -59,6 +85,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1B60C49D2C5B01E800758EE3 /* LibAVDebugSanitychecker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LibAVDebugSanitychecker; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BAC24712C52FF960018E44F /* libcorecrypto.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcorecrypto.tbd; path = usr/lib/system/libcorecrypto.tbd; sourceTree = SDKROOT; };
 		1BAC24722C52FF960018E44F /* libcommonCrypto.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcommonCrypto.tbd; path = usr/lib/system/libcommonCrypto.tbd; sourceTree = SDKROOT; };
 		1BAC24752C52FFEC0018E44F /* libdz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libdz.tbd; path = usr/lib/libdz.tbd; sourceTree = SDKROOT; };
@@ -72,6 +99,16 @@
 		1BACCBD72C52B9940018E44F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1BACCBDE2C52CFB30018E44F /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ffmpeg/libavcodec/libavcodec.a; sourceTree = "<group>"; };
 		1BACCBE02C52CFDA0018E44F /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ffmpeg/libavformat/libavformat.a; sourceTree = "<group>"; };
+		1BB087872C5B031A00758AE1 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		1BB087892C5B031F00758AE1 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		1BB0878B2C5B032C00758AE1 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
+		1BB0878D2C5B033500758AE1 /* MediaToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaToolbox.framework; path = System/Library/Frameworks/MediaToolbox.framework; sourceTree = SDKROOT; };
+		1BB0878E2C5B033500758AE1 /* MediaExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaExtension.framework; path = System/Library/Frameworks/MediaExtension.framework; sourceTree = SDKROOT; };
+		1BB087912C5B034600758AE1 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		1BB087932C5B034A00758AE1 /* CoreAudioTypes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioTypes.framework; path = System/Library/Frameworks/CoreAudioTypes.framework; sourceTree = SDKROOT; };
+		1BB087952C5B036A00758AE1 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		1BB087972C5B037500758AE1 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
+		1BB087982C5B037500758AE1 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		1BB985EA2C5306FB005E59B7 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavutil.a; sourceTree = "<group>"; };
 		1BB986342C55EB09005E59B7 /* PLUGIN-NOTES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "PLUGIN-NOTES.md"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -88,6 +125,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		1B60C49E2C5B01E800758EE3 /* LibAVDebugSanitychecker */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LibAVDebugSanitychecker; sourceTree = "<group>"; };
 		1BACCB972C52ACBE0018E44F /* LibAVExtensionHost */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LibAVExtensionHost; sourceTree = "<group>"; };
 		1BACCBA92C52ACBF0018E44F /* LibAVExtensionHostTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LibAVExtensionHostTests; sourceTree = "<group>"; };
 		1BACCBB32C52ACBF0018E44F /* LibAVExtensionHostUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LibAVExtensionHostUITests; sourceTree = "<group>"; };
@@ -95,6 +133,30 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1B60C49A2C5B01E800758EE3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1BB087992C5B037500758AE1 /* AudioUnit.framework in Frameworks */,
+				1BB0879A2C5B037500758AE1 /* AudioToolbox.framework in Frameworks */,
+				1BB087962C5B036A00758AE1 /* CoreVideo.framework in Frameworks */,
+				1BB087922C5B034600758AE1 /* CoreAudio.framework in Frameworks */,
+				1BB0878F2C5B033500758AE1 /* MediaToolbox.framework in Frameworks */,
+				1BB087902C5B033500758AE1 /* MediaExtension.framework in Frameworks */,
+				1BB0878C2C5B032C00758AE1 /* VideoToolbox.framework in Frameworks */,
+				1BB0878A2C5B031F00758AE1 /* AVFoundation.framework in Frameworks */,
+				1BB087882C5B031A00758AE1 /* CoreMedia.framework in Frameworks */,
+				1BB087812C5B025C00758AE1 /* libbz2.tbd in Frameworks */,
+				1BB087832C5B025C00758AE1 /* libcorecrypto.tbd in Frameworks */,
+				1BB087822C5B025C00758AE1 /* libz.tbd in Frameworks */,
+				1BB087862C5B025C00758AE1 /* libavformat.a in Frameworks */,
+				1BB087802C5B025C00758AE1 /* libiconv.tbd in Frameworks */,
+				1BB087842C5B025C00758AE1 /* libcommonCrypto.tbd in Frameworks */,
+				1BB087852C5B025C00758AE1 /* libavcodec.a in Frameworks */,
+				1BB0877F2C5B025C00758AE1 /* libavutil.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1BACCB922C52ACBE0018E44F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -143,6 +205,7 @@
 				1BACCBA92C52ACBF0018E44F /* LibAVExtensionHostTests */,
 				1BACCBB32C52ACBF0018E44F /* LibAVExtensionHostUITests */,
 				1BACCBC82C52AE1D0018E44F /* LibAVExtension */,
+				1B60C49E2C5B01E800758EE3 /* LibAVDebugSanitychecker */,
 				1BACCB962C52ACBE0018E44F /* Products */,
 				1BACCBDB2C52CF650018E44F /* Frameworks */,
 			);
@@ -155,6 +218,7 @@
 				1BACCBA62C52ACBF0018E44F /* LibAVExtensionHostTests.xctest */,
 				1BACCBB02C52ACBF0018E44F /* LibAVExtensionHostUITests.xctest */,
 				1BACCBC72C52AE1D0018E44F /* LibAVExtension.appex */,
+				1B60C49D2C5B01E800758EE3 /* LibAVDebugSanitychecker */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -162,6 +226,16 @@
 		1BACCBDB2C52CF650018E44F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1BB087982C5B037500758AE1 /* AudioToolbox.framework */,
+				1BB087972C5B037500758AE1 /* AudioUnit.framework */,
+				1BB087952C5B036A00758AE1 /* CoreVideo.framework */,
+				1BB087932C5B034A00758AE1 /* CoreAudioTypes.framework */,
+				1BB087912C5B034600758AE1 /* CoreAudio.framework */,
+				1BB0878E2C5B033500758AE1 /* MediaExtension.framework */,
+				1BB0878D2C5B033500758AE1 /* MediaToolbox.framework */,
+				1BB0878B2C5B032C00758AE1 /* VideoToolbox.framework */,
+				1BB087892C5B031F00758AE1 /* AVFoundation.framework */,
+				1BB087872C5B031A00758AE1 /* CoreMedia.framework */,
 				1BAC247B2C5300630018E44F /* libiconv.tbd */,
 				1BAC24792C5300380018E44F /* libbz2.tbd */,
 				1BAC24772C52FFFC0018E44F /* libz.tbd */,
@@ -178,6 +252,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1B60C49C2C5B01E800758EE3 /* LibAVDebugSanitychecker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1B60C4A12C5B01E800758EE3 /* Build configuration list for PBXNativeTarget "LibAVDebugSanitychecker" */;
+			buildPhases = (
+				1B60C4992C5B01E800758EE3 /* Sources */,
+				1B60C49A2C5B01E800758EE3 /* Frameworks */,
+				1B60C49B2C5B01E800758EE3 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1B60C49E2C5B01E800758EE3 /* LibAVDebugSanitychecker */,
+			);
+			name = LibAVDebugSanitychecker;
+			packageProductDependencies = (
+			);
+			productName = LibAVDebugSanitychecker;
+			productReference = 1B60C49D2C5B01E800758EE3 /* LibAVDebugSanitychecker */;
+			productType = "com.apple.product-type.tool";
+		};
 		1BACCB942C52ACBE0018E44F /* LibAVExtensionHost */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1BACCBBA2C52ACBF0018E44F /* Build configuration list for PBXNativeTarget "LibAVExtensionHost" */;
@@ -280,6 +376,9 @@
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					1B60C49C2C5B01E800758EE3 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 					1BACCB942C52ACBE0018E44F = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -314,6 +413,7 @@
 				1BACCBA52C52ACBF0018E44F /* LibAVExtensionHostTests */,
 				1BACCBAF2C52ACBF0018E44F /* LibAVExtensionHostUITests */,
 				1BACCBC62C52AE1D0018E44F /* LibAVExtension */,
+				1B60C49C2C5B01E800758EE3 /* LibAVDebugSanitychecker */,
 			);
 		};
 /* End PBXProject section */
@@ -352,6 +452,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1B60C4992C5B01E800758EE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1BACCB912C52ACBE0018E44F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -401,6 +508,56 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		1B60C4A22C5B01E800758EE3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = SHG3AW6YV7;
+				ENABLE_HARDENED_RUNTIME = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ffmpeg",
+					"$(SRCROOT)/ffmpeg/libavcodec",
+					"$(SRCROOT)/ffmpeg/libavformat",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ffmpeg/libavcodec",
+					"$(PROJECT_DIR)/ffmpeg/libavformat",
+					"$(PROJECT_DIR)/ffmpeg/libavutil",
+					"$(PROJECT_DIR)",
+					"$(SDKROOT)/usr/lib/system",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1B60C4A32C5B01E800758EE3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = SHG3AW6YV7;
+				ENABLE_HARDENED_RUNTIME = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/ffmpeg",
+					"$(SRCROOT)/ffmpeg/libavcodec",
+					"$(SRCROOT)/ffmpeg/libavformat",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ffmpeg/libavcodec",
+					"$(PROJECT_DIR)/ffmpeg/libavformat",
+					"$(PROJECT_DIR)/ffmpeg/libavutil",
+					"$(PROJECT_DIR)",
+					"$(SDKROOT)/usr/lib/system",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 		1BACCBB82C52ACBF0018E44F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -775,6 +932,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1B60C4A12C5B01E800758EE3 /* Build configuration list for PBXNativeTarget "LibAVDebugSanitychecker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1B60C4A22C5B01E800758EE3 /* Debug */,
+				1B60C4A32C5B01E800758EE3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1BACCB902C52ACBE0018E44F /* Build configuration list for PBXProject "LibAVExtensionHost" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
