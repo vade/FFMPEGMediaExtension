@@ -276,32 +276,17 @@ typedef struct  {
 - (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler
 {
     NSLog(@"LibAVSampleCursor: loadSampleBufferContainingSamplesToEndCursor endCursor%@", endSampleCursor);
-
-        // This is probably wrong, since we are frame stepping again
-    // but lets just see whats what
-//    AVPacket packet;
-//    while (av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0)
-//    {
-//        if ( packet.stream_index == self.trackReader.streamIndex - 1 )
-//        {
-//
-//            [self updateStateForPacket:&packet];
-
+   
     [self seekToPTS:self.presentationTimeStamp];
     
-    const AVPacket* packet = [self copyNextAVPacket];
+    AVPacket* packet = [self copyNextAVPacket];
     CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVPacketWithoutDecoding:packet];
 
-//    av_packet_free(&packet);
+    NSLog(@"LibAVSampleCursor: loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", sampleBuffer);
     
-            NSLog(@"LibAVSampleCursor: loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", sampleBuffer);
+    completionHandler(sampleBuffer, nil);
 
-            completionHandler(sampleBuffer, nil);
-//        }
-
-//        av_packet_unref(&packet);
-//    }
-
+    av_packet_unref(packet);
 }
 
 // MARK: - NO PROTOCOL REQUIREMENTS BELOW -
@@ -492,7 +477,7 @@ typedef struct  {
     return -1;
 }
 
-- (const AVPacket *) copyNextAVPacket;
+- (AVPacket *) copyNextAVPacket;
 {
    AVPacket *packet = av_packet_alloc();
    if (!packet)
@@ -505,7 +490,6 @@ typedef struct  {
    {
        if (packet->stream_index == self.trackReader.streamIndex - 1)
        {
-//           [self updateOffsetUsingCurrentFilePosition];
            [self updateStateForPacket:packet];
 
            return packet;
