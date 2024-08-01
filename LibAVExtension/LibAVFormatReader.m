@@ -24,16 +24,18 @@ int readPacket(void *opaque, uint8_t *buf, int buf_size)
     
     size_t bytesRead = 0;
     
-    
     BOOL readResult = [formatReader.byteSource readDataOfLength:buf_size
                                                      fromOffset:formatReader.currentReadOffset
                                                   toDestination:buf
                                                       bytesRead:&bytesRead
                                                           error:nil];
 
-    NSLog(@"LibAVFormatReader got readPacket Success: %i fromOffset: %zu, size: %i", readResult, formatReader.currentReadOffset, buf_size);
-
-    formatReader.currentReadOffset = avio_tell(formatReader->format_ctx->pb);
+    NSLog(@"LibAVFormatReader got readPacket Success: %i fromOffset: %zu, size: %i, read: %zu", readResult, formatReader.currentReadOffset, buf_size, bytesRead);
+    
+    
+    formatReader.currentReadOffset += bytesRead;
+    
+//    formatReader.currentReadOffset = avio_tell(formatReader->format_ctx->pb);
         
     return bytesRead;
 }
@@ -42,20 +44,24 @@ int readPacket(void *opaque, uint8_t *buf, int buf_size)
 int64_t seek(void *opaque, int64_t offset, int whence)
 {
     LibAVFormatReader* formatReader = (__bridge LibAVFormatReader*) opaque;
-
+    
     switch (whence) {
         case SEEK_SET:
             formatReader.currentReadOffset = offset;
-            break;
+            return formatReader.currentReadOffset;
+            
         case SEEK_CUR:
             formatReader.currentReadOffset += offset;
-            break;
+            return formatReader.currentReadOffset;
+
         case SEEK_END:
             formatReader.currentReadOffset = [formatReader.byteSource fileLength] + offset;
-            break;
+            return formatReader.currentReadOffset;
+
         case AVSEEK_SIZE:
             return [formatReader.byteSource fileLength];
     }
+    
     return 0;
 }
 
@@ -112,7 +118,9 @@ int64_t seek(void *opaque, int64_t offset, int whence)
         MEFileInfo* fileInfo = [[MEFileInfo alloc] init];
         
         strongSelf->format_ctx = avformat_alloc_context();
-
+        
+    strongSelf->format_ctx->avio_flags = AVIO_FLAG_DIRECT;
+    
         strongSelf->avio_ctx_buffer = av_malloc(4096);
 
         // Pass self so we have a callback to our Obj-C objects properties

@@ -328,8 +328,8 @@
     
     switch (codecType)
     {
-//        case kCMVideoCodecType_H264:
-//            return [self createH264ExtraData];
+        case kCMVideoCodecType_H264:
+            return [self createH264ExtraData];
             
         default:
             return NULL;
