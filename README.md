@@ -1,6 +1,6 @@
 # FFMPEGMediaExtension
 
-This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theory would allow for native AVFOundation container parsing and decode.
+This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theory would allow for native AVFoundation container parsing and decode.
 
 Since MediaExtensions are shipped in a host app, this has also provides a Host app.
 
