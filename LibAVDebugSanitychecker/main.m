@@ -33,9 +33,60 @@ void printPacketInfo(const char *filename)
         return;
     }
 
+    const AVDictionaryEntry *e = NULL;
+
+    while ((e = av_dict_iterate(formatContext->metadata, e)))
+    {
+        NSString* key = [[NSString alloc] initWithUTF8String: e->key];
+        NSString* value = [[NSString alloc] initWithUTF8String: e->value];
+
+        NSLog(@"Found Asset Metadata Key %@ Value:%@", key, value);
+    }
+    
+    for (int programNum = 0;  programNum < formatContext->nb_programs; programNum++)
+    {
+        AVProgram* program = formatContext->programs[programNum];
+        
+        const AVDictionaryEntry *e = NULL;
+        
+        while ((e = av_dict_iterate(program->metadata, e)))
+        {
+            NSString* key = [[NSString alloc] initWithUTF8String: e->key];
+            NSString* value = [[NSString alloc] initWithUTF8String: e->value];
+            
+            NSLog(@"Found Program Metadata Key %@ Value:%@", key, value);
+        }
+    }
+    
+    
+    for (int streamNum = 0; streamNum < formatContext->nb_streams; streamNum++)
+    {
+        AVStream* stream = formatContext->streams[streamNum];
+
+        NSLog(@"Found Stream with ID: %i, index %i", stream->id, streamNum);
+        
+        NSLog(@"Stream avg frame rate: %f", av_q2d( stream->avg_frame_rate ) );
+
+        NSLog(@"Stream natural time scale: %d", stream->time_base.den );
+
+        
+        NSLog(@"Stream natural size: %d", stream->time_base.den );
+
+        // Lets use this to debug our stream metadata
+        
+        const AVDictionaryEntry *e = NULL;
+
+        while ((e = av_dict_iterate(stream->metadata, e)))
+        {
+            NSString* key = [[NSString alloc] initWithUTF8String: e->key];
+            NSString* value = [[NSString alloc] initWithUTF8String: e->value];
+
+            NSLog(@"Found Stream Metadata Key %@ Value:%@", key, value);
+        }
+    }
+    
     // Read frames until we find the first packet in the first stream
     int i = 0;
-    
     while ( (ret = av_read_frame(formatContext, &packet)) >= 0 )
     {
 //        avio_flush(formatContext->pb);
