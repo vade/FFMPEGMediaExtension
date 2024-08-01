@@ -8,9 +8,9 @@ We have basic frame decoding working!
 <img width="1012" alt="image" src="https://github.com/user-attachments/assets/90c76ba3-4fa9-40df-869a-a9c265afb21d">
 
 But there is a ton left to do!
-- [] Asset / Track Metadata
-- [] GOP Support
-- [] Additional Codecs
+- [ ] Asset / Track Metadata
+- [ ] GOP Support
+- [ ] Additional Codecs
 
 ## Goal
 
