@@ -4,6 +4,14 @@ This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theo
 
 Since MediaExtensions are shipped in a host app, this has also provides a Host app.
 
+We have basic frame decoding working! 
+<img width="1012" alt="image" src="https://github.com/user-attachments/assets/90c76ba3-4fa9-40df-869a-a9c265afb21d">
+
+But there is a ton left to do!
+- [] Asset / Track Metadata
+- [] GOP Support
+- [] Additional Codecs
+
 ## Goal
 
 Provide additional media format playback support for any macOS app which leverages AVFoundation / Core Media as its underlying playback / decode engine
