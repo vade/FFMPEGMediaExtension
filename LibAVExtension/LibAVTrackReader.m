@@ -78,13 +78,11 @@
         
         // This is lame as fuck - we dont have zero based indexes!
         // kCMPersistentTrackID_Invalid = 0 !
-        
         METrackInfo* trackInfo = [[METrackInfo alloc] initWithMediaType:[self streamMediaType]
                                                                 trackID:(CMPersistentTrackID)self.streamIndex
                                                      formatDescriptions:formats];
         
-        // TODO: How to know if a stream is enabled?
-        trackInfo.enabled = true;
+        [self populateOptionalMetadataFieldsFor:trackInfo];
         
         // do this in place
         completionHandler(trackInfo, nil);
@@ -92,10 +90,54 @@
     }
         
     completionHandler(nil, nil);
+}
 
+
+- (void)loadUneditedDurationWithCompletionHandler:(void (^)(CMTime uneditedDuration, NSError * _Nullable error))completionHandler
+{
+    CMTime uneditedDuration = CMTimeMake(self->stream->duration, self->stream->time_base.den);
+    
+    completionHandler(uneditedDuration, nil);
+}
+
+//- (void)loadTotalSampleDataLengthWithCompletionHandler:(void (^)(int64_t totalSampleDataLength, NSError * _Nullable error))completionHandler
+//{
+//    self->stream->
+//}
+
+- (void)loadEstimatedDataRateWithCompletionHandler:(void (^)(Float32 estimatedDataRate, NSError * _Nullable error))completionHandler
+{
+    Float32 estimatedDataRate = (Float32) self->stream->codecpar->bit_rate * 8.0;
+    
+    completionHandler(estimatedDataRate, nil);
+}
+
+- (void)loadMetadataWithCompletionHandler:(void (^)(NSArray< AVMetadataItem * > * _Nullable metadata, NSError * _Nullable error))completionHandler
+{
+    
+    
 }
 
 // MARK: - Helper Methods
+
+- (void) populateOptionalMetadataFieldsFor:(METrackInfo*)trackInfo
+{
+    // TODO: How to know if a stream is enabled?
+    trackInfo.enabled = true;
+    
+    // Additional Metadata:
+    trackInfo.nominalFrameRate = av_q2d( self->stream->avg_frame_rate );
+    
+    trackInfo.naturalSize = ([self streamMediaType] == kCMMediaType_Video) ? CGSizeMake(self->stream->codecpar->width, self->stream->codecpar->height) : CGSizeZero;
+    
+    trackInfo.naturalTimescale = self->stream->time_base.den;
+    
+//        trackInfo.preferredTransform
+//        trackInfo.requiresFrameReordering
+    
+    // IETF BCP 47 (RFC 4646) which might need conversion
+//        trackInfo.extendedLanguageTag
+}
 
 - (CMMediaType) streamMediaType
 {

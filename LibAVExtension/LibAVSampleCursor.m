@@ -178,7 +178,6 @@ typedef struct  {
     }
     
     completionHandler(stepCount,nil);
-
 }
 
 - (void)stepInPresentationOrderByCount:(int64_t)stepCount completionHandler:(nonnull void (^)(int64_t, NSError * _Nullable))completionHandler
@@ -210,7 +209,7 @@ typedef struct  {
     completionHandler(stepCount,nil);
 }
 
-// MARK: - Sample Location & Delivery
+// MARK: - Sample Location - I could not get these to work
 
 //-(BOOL)samplesWithEarlierDTSsMayHaveLaterPTSsThanCursor:(id<MESampleCursor>)cursor
 //
@@ -271,6 +270,8 @@ typedef struct  {
 //    
 //    return chunk;
 //}
+
+// MARK: - Sample Buffer Delivery - Works
 
 //// Lets try a new strategy - simply implement this method and provide fully decoded frames to Core Media?
 - (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler
