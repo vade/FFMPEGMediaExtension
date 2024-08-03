@@ -7,6 +7,8 @@
 
 #import "LibAVFormatReader.h"
 #import "LibAVTrackReader.h"
+#import "AVMetadataItem+AVDictionaryEntry.h"
+#import <AVFoundation/AVFoundation.h>
 
 @interface LibAVFormatReader ()
 
@@ -139,6 +141,25 @@ int64_t seek(void *opaque, int64_t offset, int whence)
 - (void)loadMetadataWithCompletionHandler:(void (^)(NSArray< AVMetadataItem * > * _Nullable metadata, NSError * _Nullable error))completionHandler
 {
     NSLog(@"loadMetadataWithCompletionHandler");
+    
+//    if ( av_dict_count(self->format_ctx->metadata) > 0)
+//    {
+//        NSMutableArray<AVMetadataItem*>* metadataItems = [NSMutableArray new];
+//        
+//        const AVDictionaryEntry *e = NULL;
+//        while ((e = av_dict_iterate(self->format_ctx->metadata, e)))
+//        {
+//            if (e != NULL)
+//            {
+//                AVMetadataItem* item = [AVMetadataItem metadataItemFrom:e];
+//                [metadataItems addObject:item];
+//            }
+//        }
+//        
+//        completionHandler(metadataItems, nil);
+//
+//    }
+    
     
     completionHandler(nil, nil);
 }

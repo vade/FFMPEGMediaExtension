@@ -20,14 +20,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface LibAVFormatReader : NSObject <MEFormatReader>
 {
-    
     @public AVFormatContext *format_ctx;
 
     // We use this to proxy loading from the vended bytes from whatever the hell sandbox
     // into something that AVFormat can handle
     AVIOContext *avio_ctx;
     uint8_t *avio_ctx_buffer;
-    
 }
 
 @property (readonly, assign) CMTime duration;

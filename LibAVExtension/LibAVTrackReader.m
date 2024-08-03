@@ -112,11 +112,11 @@
     completionHandler(estimatedDataRate, nil);
 }
 
-- (void)loadMetadataWithCompletionHandler:(void (^)(NSArray< AVMetadataItem * > * _Nullable metadata, NSError * _Nullable error))completionHandler
-{
-    
-    
-}
+//- (void)loadMetadataWithCompletionHandler:(void (^)(NSArray< AVMetadataItem * > * _Nullable metadata, NSError * _Nullable error))completionHandler
+//{
+//    
+//    
+//}
 
 // MARK: - Helper Methods
 

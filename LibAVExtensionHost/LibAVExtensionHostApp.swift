@@ -26,7 +26,6 @@ struct LibAVExtensionHostApp: App
         self.asset = AVURLAsset(url: url)
         
         print(self.asset.duration)
-        
     }
     
     var body: some Scene
