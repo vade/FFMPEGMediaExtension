@@ -8,6 +8,13 @@
 #import "LibAVTrackReader.h"
 #import "LibAVFormatReader.h"
 #import "LibAVSampleCursor.h"
+
+#import <libavcodec/avcodec.h>
+#import <libavcodec/h264_parse.h>
+#import <libavformat/avformat.h>
+#import <libavutil/mem.h>
+
+
 #import <CoreMedia/CoreMedia.h>
 
 @interface LibAVTrackReader ()
@@ -209,7 +216,20 @@
     
     NSLog(@"LibAVTrackReader videoFormatDescription Found Codec Type: %i", codecType);
 
-    // Create video format description
+    // TODO: is this strictly necessary?
+    // Handle special cases:
+//    if (codecType == kCMVideoCodecType_H264)
+//    {
+//        CMVideoFormatDescriptionRef h264VideoFormatDescription = [self createh264VideoFormatDescription];
+//        if ( h264VideoFormatDescription != NULL )
+//        {
+//            return h264VideoFormatDescription;
+//        }
+//
+//        NSLog(@"LibAVTrackReader createh264VideoFormatDescription failed - falling back to generic path");
+//    }
+    
+    // Create Generic video format description
     OSStatus status = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
                                                      codecType,
                                                      self->stream->codecpar->width,
@@ -227,6 +247,110 @@
     return formatDescription;
 }
 
+
+- (nullable CMVideoFormatDescriptionRef)createh264VideoFormatDescription
+{
+    const uint8_t *extradata = self->stream->codecpar->extradata;
+    int extradata_size = self->stream->codecpar->extradata_size;
+    
+    if (!extradata || extradata_size <= 0)
+    {
+        NSLog(@"LibAVTrackReader: createh264VideoFormatDescription: Invalid H.264 extradata");
+        return NULL;
+    }
+    
+    H264ParamSets *ps = malloc(sizeof(H264ParamSets));
+    memset(ps, 0, sizeof(H264ParamSets));
+  
+    int is_avc = 0;
+    int nal_size = 0;
+    
+    int ret = ff_h264_decode_extradata(extradata,
+                                       extradata_size,
+                                       ps,
+                                       &is_avc,
+                                       &nal_size,
+                                       0,
+                                       NULL);
+
+//    int ret = ff_h264_decode_extradata(extradata, extradata_size, &ps);
+    if (ret < 0)
+    {
+        NSLog(@"LibAVTrackReader: createh264VideoFormatDescription: Failed to decode H.264 extradata: %s", av_err2str(ret));
+        return NULL;
+    }
+    
+    // Prepare arrays for SPS and PPS
+    NSMutableArray *spsArray = [NSMutableArray array];
+    NSMutableArray *ppsArray = [NSMutableArray array];
+    
+    // Extract SPS
+    for (int i = 0; i < MAX_SPS_COUNT; i++)
+    {
+        if (ps->sps_list[i])
+        {
+            NSData *spsData = [NSData dataWithBytes:ps->sps_list[i]->data length:ps->sps_list[i]->data_size];
+            [spsArray addObject:spsData];
+        }
+    }
+    
+    // Extract PPS
+    for (int i = 0; i < MAX_PPS_COUNT; i++)
+    {
+        if (ps->pps_list[i])
+        {
+            NSData *ppsData = [NSData dataWithBytes:ps->pps_list[i]->data length:ps->pps_list[i]->data_size];
+            [ppsArray addObject:ppsData];
+        }
+    }
+    
+    if ([spsArray count] == 0 || [ppsArray count] == 0)
+    {
+        NSLog(@"LibAVTrackReader: createh264VideoFormatDescription: No valid SPS or PPS found");
+        ff_h264_ps_uninit(ps);
+        return NULL;
+    }
+    
+    // Prepare parameters for CMVideoFormatDescriptionCreateFromH264ParameterSets
+    NSMutableArray *parameterSets = [NSMutableArray arrayWithArray:spsArray];
+    [parameterSets addObjectsFromArray:ppsArray];
+    
+    size_t parameterSetCount = [parameterSets count];
+
+    // Use malloc to dynamically allocate memory
+    const uint8_t **parameterSetPointers = malloc(parameterSetCount * sizeof(uint8_t *));
+    size_t *parameterSetSizes = malloc(parameterSetCount * sizeof(size_t));
+
+    [parameterSets enumerateObjectsUsingBlock:^(NSData *paramSet, NSUInteger idx, BOOL *stop) {
+        parameterSetPointers[idx] = [paramSet bytes];
+        parameterSetSizes[idx] = [paramSet length];
+    }];
+
+    // Make sure to free the allocated memory when done
+
+    // Create CMVideoFormatDescription
+    CMFormatDescriptionRef formatDescription = NULL;
+    OSStatus status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
+                                                                          (int)parameterSetCount,
+                                                                          parameterSetPointers,
+                                                                          parameterSetSizes,
+                                                                          nal_size, // NAL unit length size, typically 4 for H.264
+                                                                          &formatDescription);
+    
+    // Clean up
+    ff_h264_ps_uninit(ps);
+    
+    free(parameterSetPointers);
+    free(parameterSetSizes);
+
+    if (status != noErr)
+    {
+        NSLog(@"LibAVTrackReader: createh264VideoFormatDescription: Failed to create video format description: %d", (int)status);
+        return NULL;
+    }
+    
+    return formatDescription;
+}
 - (nullable CMFormatDescriptionRef) audioFormatDescription
 {
     CMAudioFormatDescriptionRef audioFormatDescription = NULL;
