@@ -71,7 +71,15 @@ typedef struct  {
     return self;
 }
 
-- (instancetype) initWithTrackReader:(LibAVTrackReader *)trackReader pts:(CMTime)pts dts:(CMTime)dts duration:(CMTime)duration size:(NSUInteger)sampleSize offset:(NSUInteger)offset
+- (instancetype) initWithTrackReader:(LibAVTrackReader *)trackReader
+                                 pts:(CMTime)pts
+                                 dts:(CMTime)dts
+                            duration:(CMTime)duration
+                                size:(NSUInteger)sampleSize
+                              offset:(NSUInteger)offset
+                            syncInfo:(AVSampleCursorSyncInfo)syncInfo
+                      dependencyInfo:(AVSampleCursorDependencyInfo)dependencyInfo
+
 {
     self = [super init];
     if (self)
@@ -90,6 +98,8 @@ typedef struct  {
         self.sampleSize = sampleSize;
         self.sampleOffset = offset;
         
+        self.syncInfo = syncInfo;
+        self.currentSampleDependencyInfo = dependencyInfo;
 
         // Populate some of our properties off of the first packet and reset
         [self seekToPTS:self.presentationTimeStamp];
@@ -102,7 +112,6 @@ typedef struct  {
 
 // MARK: - MESampleCursor Protocol Requirements
 
-
 - (nonnull id)copyWithZone:(nullable NSZone *)zone
 {
     NSLog(@"LibAVSampleCursor %@ copyWithZone", self);
@@ -112,10 +121,11 @@ typedef struct  {
                                                                          dts:self.decodeTimeStamp
                                                                     duration:self.currentSampleDuration
                                                                         size:self.sampleSize
-                                                                      offset:self.sampleOffset];
-    
-    NSLog(@"LibAVSampleCursor %@ created copy %@", self, copy);
+                                                                      offset:self.sampleOffset
+                                                                    syncInfo:self.syncInfo
+                                                              dependencyInfo:self.currentSampleDependencyInfo];
 
+    NSLog(@"LibAVSampleCursor %@ created copy %@", self, copy);
 
 //    // Reuquired
 //    copy.presentationTimeStamp = self.presentationTimeStamp;
@@ -124,8 +134,6 @@ typedef struct  {
 //    copy.currentSampleFormatDescription = self.currentSampleFormatDescription;
 
     // Optional
-//    copy.syncInfo = self.syncInfo;
-//    copy.currentSampleDependencyInfo = self.currentSampleDependencyInfo;
     
 //    // Private
 //    copy.sampleSize = self.sampleSize;
@@ -218,7 +226,6 @@ typedef struct  {
             NSError *error = [NSError errorWithDomain:@"com.example" code:0 userInfo:nil];
 
             completionHandler(stepCount,error);
-
         }
     }
     
@@ -247,7 +254,6 @@ typedef struct  {
             NSError *error = [NSError errorWithDomain:@"com.example" code:0 userInfo:nil];
 
             completionHandler(stepCount,error);
-
         }
     }
     
@@ -431,12 +437,12 @@ typedef struct  {
     NSLog(@"LibAVSampleCursor: %@ seekToPTS %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
 
     // Configure our seek flag
-    int flags = (CMTIME_COMPARE_INLINE(self.presentationTimeStamp, <, time)) ? 0 : AVSEEK_FLAG_BACKWARD;
+//    int flags = (CMTIME_COMPARE_INLINE(self.presentationTimeStamp, <, time)) ? 0 : AVSEEK_FLAG_BACKWARD;
 
     // We want to seek to any time stamp, not just a key frame
-    flags |= AVSEEK_FLAG_ANY;
+//    flags |= AVSEEK_FLAG_ANY;
 
-    return [self seekToTime:time flags:flags];
+    return [self seekToTime:time flags: 0 ];
 }
 
 // TODO: Validate DTS seeking is correct for out of order codecs
@@ -452,12 +458,12 @@ typedef struct  {
     NSLog(@"LibAVSampleCursor: %@ seekToDTS %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
     
     // Configure our seek flag
-    int flags = (CMTIME_COMPARE_INLINE(self.decodeTimeStamp, <, time)) ? 0 : AVSEEK_FLAG_BACKWARD;
+//    int flags = (CMTIME_COMPARE_INLINE(self.decodeTimeStamp, <, time)) ? 0 : AVSEEK_FLAG_BACKWARD;
 
     // We want to seek to any time stamp, not just a key frame
-    flags |= AVSEEK_FLAG_ANY;
+//    flags |= AVSEEK_FLAG_ANY;
 
-    return [self seekToTime:time flags:flags];
+    return [self seekToTime:time flags: 0 ];
 }
 
 
@@ -469,9 +475,7 @@ typedef struct  {
                          self.trackReader.streamIndex - 1,
                          timeInStreamUnits.value,
                          flags);
-    
-//    [self updateOffsetUsingCurrentFilePosition];
-    
+        
     return ret;
 }
 
@@ -493,15 +497,35 @@ typedef struct  {
 
 - (int) readPacketsUntilTargetTime:(CMTime)targetTime IsGreaterThanOrEqualToReferenceTime:(CMTime)referenceTime
 {
-    while ( [self readAPacketAndUpdateState] >= 0 )
+    NSLog(@"LibAVSampleCursor: %@ readPacketsUntilTargetTime %@", self, CMTimeCopyDescription(kCFAllocatorDefault, referenceTime));
+
+    AVPacket packet;
+
+    while ( av_read_frame(self.trackReader.formatReader->format_ctx, &packet) >= 0 )
     {
-        if ( CMTIME_COMPARE_INLINE(referenceTime, >=, targetTime) )
+        if ( (packet.stream_index == self.trackReader.streamIndex - 1) && CMTIME_COMPARE_INLINE(referenceTime, >=, targetTime) )
         {
+            [self updateStateForPacket:&packet];
+            
+            av_packet_unref(&packet);
+
             return 1;
         }
+
+        av_packet_unref(&packet);
     }
-    
+
     return -1;
+    
+//    while ( [self readAPacketAndUpdateState] >= 0 )
+//    {
+//        if ( CMTIME_COMPARE_INLINE(referenceTime, >=, targetTime) )
+//        {
+//            return 1;
+//        }
+//    }
+//    
+//    return -1;
 }
 
 // Reciever must call av_packet_unref on this packer
@@ -515,8 +539,6 @@ typedef struct  {
     {
         if ( packet.stream_index == self.trackReader.streamIndex - 1 )
         {
-//            [self updateOffsetUsingCurrentFilePosition];
-
             [self updateStateForPacket:&packet];
             
             av_packet_unref(&packet);
@@ -526,7 +548,6 @@ typedef struct  {
 
         av_packet_unref(&packet);
     }
-    
 
     return -1;
 }
@@ -556,8 +577,6 @@ typedef struct  {
    av_packet_free(&packet);
    return NULL;
 }
-
-
 
 // MARK: - State
 
@@ -594,10 +613,7 @@ typedef struct  {
     
     self.sampleSize = packet->size;
     self.sampleOffset = packet->pos;
-//    self.sampleOffset = self.trackReader.formatReader.currentReadOffset;// - self.sampleSize;
-//    self.sampleOffset = avio_tell(self.trackReader.formatReader->format_ctx->pb);// - self.sampleSize;
-    
-    
+
     NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Presentation Timestamp %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
     NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Decode Timestamp %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));
     NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Duration %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.currentSampleDuration));
@@ -606,7 +622,6 @@ typedef struct  {
 }
 
 // MARK: - Sync Utility
-
 
 - (AVSampleCursorSyncInfo) extractSyncInfoFrom:(const AVPacket*)packet
 {
