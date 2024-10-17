@@ -339,6 +339,8 @@ typedef struct  {
     completionHandler(sampleBuffer, nil);
 
     av_packet_unref(packet);
+    
+    CFRelease(sampleBuffer);
 }
 
 // MARK: - NO PROTOCOL REQUIREMENTS BELOW -
