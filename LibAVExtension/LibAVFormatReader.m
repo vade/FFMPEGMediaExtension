@@ -26,15 +26,22 @@ int readPacket(void *opaque, uint8_t *buf, int buf_size)
     
     size_t bytesRead = 0;
     
+    NSError* error = nil;
+    
     BOOL readResult = [formatReader.byteSource readDataOfLength:buf_size
                                                      fromOffset:formatReader.currentReadOffset
                                                   toDestination:buf
                                                       bytesRead:&bytesRead
-                                                          error:nil];
+                                                          error:&error];
 
-    NSLog(@"LibAVFormatReader got readPacket Success: %i fromOffset: %zu, size: %i, read: %zu", readResult, formatReader.currentReadOffset, buf_size, bytesRead);
-    
-    
+    if (readResult != true || error != nil)
+    {
+        NSLog(@"LibAVFormatReader got readPacket Fail: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+
+        return 0;
+    }
+//    NSLog(@"LibAVFormatReader got readPacket Success: fromOffset: %zu, size: %i, read: %zu", formatReader.currentReadOffset, buf_size, bytesRead);
+//
     formatReader.currentReadOffset += bytesRead;
     
 //    formatReader.currentReadOffset = avio_tell(formatReader->format_ctx->pb);

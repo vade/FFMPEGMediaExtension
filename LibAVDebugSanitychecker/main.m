@@ -69,7 +69,6 @@ void printPacketInfo(const char *filename)
 
         NSLog(@"Stream natural time scale: %d", stream->time_base.den );
 
-        
         NSLog(@"Stream natural size: %d", stream->time_base.den );
 
         // Lets use this to debug our stream metadata

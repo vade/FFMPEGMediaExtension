@@ -20,6 +20,8 @@
 @interface LibAVTrackReader ()
 @property (readwrite, strong) LibAVFormatReader* formatReader;
 @property (readwrite, assign) int streamIndex;
+@property (readwrite, retain, nullable)  __attribute__((NSObject)) CMFormatDescriptionRef formatDescription;
+
 @end
 
 @implementation LibAVTrackReader
@@ -30,14 +32,16 @@
     if (self != nil)
     {
         self.formatReader = formatReader;
-
+        
         // Cannot have zero index tracks in AVF - ( kCMPersistentTrackID_Invalid = 0 )
         self.streamIndex = index + 1;
         self->stream = stream;
+        
+        self.formatDescription = [self calculateFormatDescription];
+
     }
     return self;
 }
-
 
 - (void)generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
 {
@@ -69,7 +73,6 @@
     
     completionHandler(sampleCursor, nil);
 }
-
 
 - (void)loadTrackInfoWithCompletionHandler:(nonnull void (^)(METrackInfo * _Nullable, NSError * _Nullable))completionHandler {
     
@@ -175,7 +178,7 @@
 
 // MARK: - CMFormatDescription
 
-- (nullable CMFormatDescriptionRef) formatDescription
+- (nullable CMFormatDescriptionRef) calculateFormatDescription
 {
     switch (self->stream->codecpar->codec_type)
     {
