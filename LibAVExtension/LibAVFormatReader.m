@@ -36,27 +36,66 @@ int readPacket(void *opaque, uint8_t *buf, int buf_size)
 
     if (readResult != true || error != nil)
     {
-        NSLog(@"LibAVFormatReader got readPacket Fail: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
         switch (error.code)
         {
+            case MEErrorUnsupportedFeature:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorUnsupportedFeature: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorAllocationFailure:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorAllocationFailure: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorInvalidParameter:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorInvalidParameter: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorParsingFailure:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorParsingFailure: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorInternalFailure:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorInternalFailure: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorPropertyNotSupported:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorPropertyNotSupported: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorNoSuchEdit:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorNoSuchEdit: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorNoSamples:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorNoSamples: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_BUG;
+
+            case MEErrorLocationNotAvailable:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorLocationNotAvailable: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_UNKNOWN;
+                
             case MEErrorEndOfStream:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorEndOfStream: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
                 return AVERROR_EOF;
 
             case MEErrorPermissionDenied:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorPermissionDenied: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
                 return AVERROR_HTTP_UNAUTHORIZED;
 
-            case MEErrorLocationNotAvailable:
-                return AVERROR_UNKNOWN;
+            case MEErrorReferenceMissing:
+                NSLog(@"LibAVFormatReader got readPacket MEErrorReferenceMissing: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+                return AVERROR_HTTP_UNAUTHORIZED;
+
             default:
+                NSLog(@"LibAVFormatReader got readPacket unknown error: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+
                 return AVERROR_BUG;
         }
     }
 //    NSLog(@"LibAVFormatReader got readPacket Success: fromOffset: %zu, size: %i, read: %zu", formatReader.currentReadOffset, buf_size, bytesRead);
 //
     formatReader.currentReadOffset += bytesRead;
-    
-//    formatReader.currentReadOffset = avio_tell(formatReader->format_ctx->pb);
-        
+            
     return bytesRead;
 }
 
@@ -129,7 +168,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     
     self->format_ctx = avformat_alloc_context();
     
-//    self->format_ctx->avio_flags = AVIO_FLAG_DIRECT;
+    self->format_ctx->avio_flags = AVIO_FLAG_DIRECT;
     
     self->avio_ctx_buffer = av_malloc(4096);
     
