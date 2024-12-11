@@ -30,7 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, retain, nullable)  __attribute__((NSObject)) CMFormatDescriptionRef formatDescription;
 
 - (instancetype) initWithFormatReader:(LibAVFormatReader*)formatReader stream:(AVStream*)stream atIndex:(int)index;
-//- (nullable CMFormatDescriptionRef) formatDescription;
 
 @end
 

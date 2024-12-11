@@ -47,8 +47,8 @@
 {
     NSLog(@"LibAVTrackReader generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler");
     
-    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
-    [sampleCursor seekToBeginningOfFile];
+    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self pts:kCMTimeZero];
+//    [sampleCursor seekToBeginningOfFile];
     
     completionHandler(sampleCursor, nil);
 }
@@ -57,8 +57,8 @@
 {
     NSLog(@"LibAVTrackReader generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler");
 
-    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
-    [sampleCursor seekToEndOfFile];
+    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self pts:self.formatReader.duration];
+//    [sampleCursor seekToEndOfFile];
     
     completionHandler(sampleCursor, nil);
 }
@@ -67,9 +67,9 @@
 {
     NSLog(@"LibAVTrackReader generateSampleCursorAtPresentationTimeStamp %@", CMTimeCopyDescription(kCFAllocatorDefault, presentationTimeStamp));
 
-    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self];
+    LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self pts:presentationTimeStamp];
     
-    [sampleCursor seekToPTS:presentationTimeStamp];
+//    [sampleCursor seekToPTS:presentationTimeStamp];
     
     completionHandler(sampleCursor, nil);
 }
@@ -143,7 +143,7 @@
     trackInfo.naturalTimescale = self->stream->time_base.den;
     
 //        trackInfo.preferredTransform
-//        trackInfo.requiresFrameReordering
+    trackInfo.requiresFrameReordering = true;
     
     // IETF BCP 47 (RFC 4646) which might need conversion
 //        trackInfo.extendedLanguageTag
@@ -491,7 +491,6 @@
 }
 
 // MARK: - CMFormatDescription Extra Data
-
 - (nullable CFDictionaryRef) createExtraDataForCodecType:(CMVideoCodecType)codecType
 {
     
