@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
     @public AVStream* stream;
 }
 
+
 @property (readonly, strong) LibAVFormatReader* formatReader;
 @property (readonly, assign) int streamIndex;
 @property (readonly, retain, nullable)  __attribute__((NSObject)) CMFormatDescriptionRef formatDescription;

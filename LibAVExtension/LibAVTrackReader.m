@@ -48,7 +48,6 @@
     NSLog(@"LibAVTrackReader generateSampleCursorAtFirstSampleInDecodeOrderWithCompletionHandler");
     
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self pts:kCMTimeZero];
-//    [sampleCursor seekToBeginningOfFile];
     
     completionHandler(sampleCursor, nil);
 }
@@ -58,19 +57,17 @@
     NSLog(@"LibAVTrackReader generateSampleCursorAtLastSampleInDecodeOrderWithCompletionHandler");
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self pts:self.formatReader.duration];
-//    [sampleCursor seekToEndOfFile];
     
     completionHandler(sampleCursor, nil);
 }
 
+// Provides a new MESampleCursor object pointing to the sample at or near the specified presentation timestamp.
 - (void)generateSampleCursorAtPresentationTimeStamp:(CMTime)presentationTimeStamp completionHandler:(nonnull void (^)(id<MESampleCursor> _Nullable, NSError * _Nullable))completionHandler
 {
     NSLog(@"LibAVTrackReader generateSampleCursorAtPresentationTimeStamp %@", CMTimeCopyDescription(kCFAllocatorDefault, presentationTimeStamp));
 
     LibAVSampleCursor* sampleCursor = [[LibAVSampleCursor alloc] initWithTrackReader:self pts:presentationTimeStamp];
-    
-//    [sampleCursor seekToPTS:presentationTimeStamp];
-    
+        
     completionHandler(sampleCursor, nil);
 }
 
@@ -515,7 +512,6 @@
             @"avcC": [NSData dataWithBytes:extradata length:extradata_size]
         }
     } : NULL ;
-
 }
 
 
