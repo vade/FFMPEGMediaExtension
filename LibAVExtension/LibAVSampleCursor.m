@@ -34,6 +34,7 @@ typedef struct  {
 // Optional Sync Private Setters
 @property (nonatomic, readwrite) AVSampleCursorSyncInfo syncInfo;
 @property (nonatomic, readwrite) AVSampleCursorDependencyInfo currentSampleDependencyInfo;
+@property (nonatomic, readwrite) CMTime decodeTimeOfLastSampleReachableByForwardSteppingThatIsAlreadyLoadedByByteSource;
 
 // private
 @property (nonatomic, readwrite, assign) NSUInteger sampleOffset;
@@ -53,6 +54,12 @@ typedef struct  {
         NSLog(@"LibAVSampleCursor %@ init", self);
 
         self.trackReader = trackReader;
+        
+        // TODO: THis assumes we
+        // * have a file we can seek to
+        // * there isnt any dumb shit™ happening
+        CMTime uneditedDuration = CMTimeMake(trackReader->stream->duration, trackReader->stream->time_base.den);
+        self.decodeTimeOfLastSampleReachableByForwardSteppingThatIsAlreadyLoadedByByteSource = uneditedDuration;
         
         self.presentationTimeStamp = kCMTimeInvalid;
         self.decodeTimeStamp = kCMTimeInvalid;
@@ -239,14 +246,14 @@ typedef struct  {
         return;
     }
     
-    ret = [self seekToDTS:timeToSeekTo];
-    
-    if (ret < 0)
-    {
-        NSError* error = [self libAVFormatErrorFrom:ret];
-        completionHandler(stepCount, error);
-        return;
-    }
+//    ret = [self seekToDTS:timeToSeekTo];
+//    
+//    if (ret < 0)
+//    {
+//        NSError* error = [self libAVFormatErrorFrom:ret];
+//        completionHandler(stepCount, error);
+//        return;
+//    }
     
     completionHandler(stepCount, nil);
 }
@@ -277,29 +284,30 @@ typedef struct  {
         return;
     }
     
-    ret = [self seekToDTS:timeToSeekTo];
-    
-    if (ret < 0)
-    {
-        NSError* error = [self libAVFormatErrorFrom:ret];
-        completionHandler(stepCount, error);
-        return;
-    }
+//    ret = [self seekToDTS:timeToSeekTo];
+//    
+//    if (ret < 0)
+//    {
+//        NSError* error = [self libAVFormatErrorFrom:ret];
+//        completionHandler(stepCount, error);
+//        return;
+//    }
     
     completionHandler(stepCount, nil);
 }
 
+//
+//-(BOOL)samplesWithEarlierDTSsMayHaveLaterPTSsThanCursor:(id<MESampleCursor>)cursor
+//{
+//    return YES;
+//}
+//
+//-(BOOL)samplesWithLaterDTSsMayHaveEarlierPTSsThanCursor:(id<MESampleCursor>)cursor
+//{
+//    return YES;
+//}
+
 // MARK: - Sample Location - I could not get these to work
-
--(BOOL)samplesWithEarlierDTSsMayHaveLaterPTSsThanCursor:(id<MESampleCursor>)cursor
-{
-    return NO;
-}
-
--(BOOL)samplesWithLaterDTSsMayHaveEarlierPTSsThanCursor:(id<MESampleCursor>)cursor
-{
-    return NO;
-}
 
 //- (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 //{
@@ -449,13 +457,13 @@ typedef struct  {
 
 - (int) seekToPTS:(CMTime)time
 {
-    // If we are at our current time, no need to seek
-    if (CMTIME_COMPARE_INLINE(time, ==, self.presentationTimeStamp))
-    {
-        NSLog(@"LibAVSampleCursor: %@ seekToPTS already at %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
-
-        return 1;
-    }
+//    // If we are at our current time, no need to seek
+//    if (CMTIME_COMPARE_INLINE(time, ==, self.presentationTimeStamp) && CMTIME_IS_VALID( self.presentationTimeStamp ) && CMTIME_IS_VALID( time )  )
+//    {
+//        NSLog(@"LibAVSampleCursor: %@ seekToPTS already at %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
+//
+//        return 1;
+//    }
     
     NSLog(@"LibAVSampleCursor: %@ seekToPTS %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
 
@@ -465,12 +473,12 @@ typedef struct  {
 // TODO: Validate DTS seeking is correct for out of order codecs
 - (int) seekToDTS:(CMTime)time
 {
-    // If we are at our current time, no need to seek
-    if (CMTIME_COMPARE_INLINE(time, ==, self.decodeTimeStamp))
-    {
-        NSLog(@"LibAVSampleCursor: %@ seekToDTS already at %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
-        return 1;
-    }
+//    // If we are at our current time, no need to seek
+//    if (CMTIME_COMPARE_INLINE(time, ==, self.decodeTimeStamp) && CMTIME_IS_VALID( self.decodeTimeStamp )  && CMTIME_IS_VALID( time )  )
+//    {
+//        NSLog(@"LibAVSampleCursor: %@ seekToDTS already at %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
+//        return 1;
+//    }
     
     NSLog(@"LibAVSampleCursor: %@ seekToDTS %@", self, CMTimeCopyDescription(kCFAllocatorDefault, time));
     
@@ -483,7 +491,7 @@ typedef struct  {
 
     return avformat_seek_file(self.trackReader.formatReader->format_ctx,
                               self.trackReader.streamIndex - 1,
-                              0,
+                              timeInStreamUnits.value,
                               timeInStreamUnits.value,
                               timeInStreamUnits.value,
                               flags);
@@ -561,18 +569,6 @@ typedef struct  {
     self.presentationTimeStamp = [self convertToCMTime:packet->pts timebase:self.trackReader->stream->time_base];
     self.currentSampleDuration = [self convertToCMTime:packet->duration timebase:self.trackReader->stream->time_base];
     
-    // We may have gotten some bad time stamps above
-    
-    // FFMPEG will more likely give us valid PTS than DTS
-    // So lets compare DTS - if its invalid, check PTS and assign
-    // if both are invalid we're fucked.
-    if (CMTIME_IS_INVALID(self.decodeTimeStamp))
-    {
-        if (CMTIME_IS_VALID(self.presentationTimeStamp))
-        {
-            self.decodeTimeStamp = self.presentationTimeStamp;
-        }
-    }
     
     self.syncInfo = [self extractSyncInfoFrom:packet];
     self.currentSampleDependencyInfo = [self extractDependencyInfoFromPacket:packet codecParameters:self.trackReader->stream->codecpar];
@@ -650,12 +646,13 @@ typedef struct  {
     {
         NSLog(@"LibAVSampleCursor Recieved Invalid timestamp AV_NOPTS_VALUE - returning kCMTimeInvalid");
         return kCMTimeInvalid;
+//        return
     }
     
     if (ptsOrDts == INT64_MAX)
     {
         NSLog(@"LibAVSampleCursor Recieved Invalid timestamp INT64_MAX - returning kCMTimeInvalid");
-        return kCMTimeInvalid;
+        return kCMTimePositiveInfinity;
     }
     else if (ptsOrDts == INT64_MIN)
     {

@@ -26,13 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 // Optional Sync Properties
 @property (nonatomic, readonly) AVSampleCursorSyncInfo syncInfo;
 @property (nonatomic, readonly) AVSampleCursorDependencyInfo currentSampleDependencyInfo;
-
+@property (nonatomic, readonly) CMTime decodeTimeOfLastSampleReachableByForwardSteppingThatIsAlreadyLoadedByByteSource;
 
 - (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader pts:(CMTime)pts;
-
-- (void) seekToBeginningOfFile;
-- (void) seekToEndOfFile;
-- (int) seekToPTS:(CMTime)time;
 
 @end
 
