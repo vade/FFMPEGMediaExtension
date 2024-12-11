@@ -37,8 +37,19 @@ int readPacket(void *opaque, uint8_t *buf, int buf_size)
     if (readResult != true || error != nil)
     {
         NSLog(@"LibAVFormatReader got readPacket Fail: %@, fromOffset: %zu, size: %i, read: %zu", error, formatReader.currentReadOffset, buf_size, bytesRead);
+        switch (error.code)
+        {
+            case MEErrorEndOfStream:
+                return AVERROR_EOF;
 
-        return 0;
+            case MEErrorPermissionDenied:
+                return AVERROR_HTTP_UNAUTHORIZED;
+
+            case MEErrorLocationNotAvailable:
+                return AVERROR_UNKNOWN;
+            default:
+                return AVERROR_BUG;
+        }
     }
 //    NSLog(@"LibAVFormatReader got readPacket Success: fromOffset: %zu, size: %i, read: %zu", formatReader.currentReadOffset, buf_size, bytesRead);
 //
@@ -118,7 +129,7 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     
     self->format_ctx = avformat_alloc_context();
     
-    self->format_ctx->avio_flags = AVIO_FLAG_DIRECT;
+//    self->format_ctx->avio_flags = AVIO_FLAG_DIRECT;
     
     self->avio_ctx_buffer = av_malloc(4096);
     
