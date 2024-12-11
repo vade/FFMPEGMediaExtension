@@ -16,14 +16,14 @@ struct LibAVExtensionHostApp: App
     let asset: AVAsset
     init()
     {
-        VTRegisterProfessionalVideoWorkflowVideoDecoders()
         MTRegisterProfessionalVideoWorkflowFormatReaders()
+        VTRegisterProfessionalVideoWorkflowVideoDecoders()
         
         let url = URL(filePath:"/Users/vade/output.mkv")
 //         let url = URL(filePath:"/Users/vade/Downloads/RuPauls.Drag.Race.All.Stars.Untucked.S07E11.720p.WEB.h264-KOGi/Sample/rupauls.drag.race.all.stars.untucked.s07e11.720p.web.h264-kogi.sample.mkv")
 //        let url = URL(filePath:"/Users/vade/Downloads/Everything.Everywhere.All.At.Once.2022.1080p.WEB-DL.DDP5.1.H.264-EVO/Everything.Everywhere.All.At.Once.2022.1080p.WEB-DL.DDP5.1.H.264-EVO.mkv" )
         
-        self.asset = AVURLAsset(url: url)
+        self.asset = AVURLAsset(url: url,  options: [AVURLAssetPreferPreciseDurationAndTimingKey : true])
         
         print(self.asset.duration)
     }

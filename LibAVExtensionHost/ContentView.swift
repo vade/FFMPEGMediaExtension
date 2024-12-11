@@ -26,5 +26,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(asset: AVURLAsset(url: URL(filePath: "/Users/vade/SceneEditTest-Fixed-Frame-Numbers.m4v")))
+    ContentView(asset: AVURLAsset(url: URL(filePath: "/Users/vade/SceneEditTest-Fixed-Frame-Numbers.m4v"), options: [AVURLAssetPreferPreciseDurationAndTimingKey : true] ) )
 }
