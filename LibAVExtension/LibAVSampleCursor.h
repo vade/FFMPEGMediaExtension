@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) AVSampleCursorDependencyInfo currentSampleDependencyInfo;
 
 
-- (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader;
+- (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader pts:(CMTime)pts;
 
 - (void) seekToBeginningOfFile;
 - (void) seekToEndOfFile;

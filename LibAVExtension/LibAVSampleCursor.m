@@ -45,7 +45,7 @@ typedef struct  {
 
 @implementation LibAVSampleCursor
 
-- (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader;
+- (instancetype) initWithTrackReader:(LibAVTrackReader*)trackReader pts:(CMTime)pts;
 {
     self = [super init];
     if (self)
@@ -65,9 +65,9 @@ typedef struct  {
         self.sampleOffset = 0;
         
         // Populate some of our properties off of the first packet and reset
-        [self seekToBeginningOfFile];
+        [self seekToPTS:pts];
         [self readAPacketAndUpdateState];
-        [self seekToBeginningOfFile];
+        [self seekToPTS:pts];
     }
     
     return self;
@@ -107,6 +107,12 @@ typedef struct  {
     return self;
 }
 
+- (void) dealloc
+{
+    self.trackReader = nil;
+    self.currentSampleFormatDescription = NULL;
+}
+
 // MARK: - MESampleCursor Protocol Requirements
 
 - (nonnull id)copyWithZone:(nullable NSZone *)zone
@@ -133,32 +139,36 @@ typedef struct  {
        completionHandler:(nonnull void (^)(CMTime, BOOL, NSError * _Nullable))completionHandler
 {
     CMTime targetDTS = CMTimeAdd(self.decodeTimeStamp, deltaDecodeTime);
-
     
     CMTimeRange trackTimeRange = CMTimeRangeMake(kCMTimeZero, self.trackReader.formatReader.duration);
-
+    
     BOOL wasPinned = false;
-
+    
     if ( !CMTimeRangeContainsTime(trackTimeRange, targetDTS) )
     {
         targetDTS = CMTimeClampToRange(targetDTS, trackTimeRange);
         wasPinned = TRUE;
     }
-
+    
     int ret = [self seekToDTS:targetDTS];
     
-    ret = [self readAPacketAndUpdateState];
-//    int ret = [self readPacketsUntilTargetDTSIsGreaterThanOrEqualToCurrentDTS:targetDTS];
-    
-    if ( ret >= 0 )
+    if (ret < 0)
     {
-        completionHandler(self.decodeTimeStamp, wasPinned, nil);
-    }
-    else
-    {
-        NSError *error = [NSError errorWithDomain:@"com.example" code:ret userInfo:nil];
+        NSError* error = [self libAVFormatErrorFrom:ret];
         completionHandler(self.decodeTimeStamp, wasPinned, error);
+        return;
     }
+    
+    ret = [self readAPacketAndUpdateState];
+    
+    if (ret < 0)
+    {
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(self.decodeTimeStamp, wasPinned, error);
+        return;
+    }
+    
+    completionHandler(self.decodeTimeStamp, wasPinned, nil);
 }
 
 - (void)stepByPresentationTime:(CMTime)deltaPresentationTime
@@ -180,20 +190,27 @@ typedef struct  {
     int ret = [self seekToPTS:targetPTS];
 
     ret = [self readAPacketAndUpdateState];
-
-    if ( ret >= 0 )
+    
+    if (ret < 0)
     {
-        completionHandler(self.presentationTimeStamp, wasPinned, nil);
-    }
-    else
-    {
-        NSError *error = [NSError errorWithDomain:@"com.example" code:ret userInfo:nil];
+        NSError* error = [self libAVFormatErrorFrom:ret];
         completionHandler(self.presentationTimeStamp, wasPinned, error);
+        return;
     }
+    
+    ret = [self readAPacketAndUpdateState];
+    
+    if (ret < 0)
+    {
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(self.presentationTimeStamp, wasPinned, error);
+        return;
+    }
+    
+    completionHandler(self.presentationTimeStamp, wasPinned, nil);
 }
 
 // MARK: - Step By Frame
-
 
 - (void)stepInDecodeOrderByCount:(int64_t)stepCount
                 completionHandler:(void (^)(int64_t actualStepCount, NSError * _Nullable error))completionHandler
@@ -204,17 +221,34 @@ typedef struct  {
     CMTime timeToSeekTo = CMTimeAdd(self.decodeTimeStamp, timeOffset);
     
     int ret = [self seekToDTS:timeToSeekTo];
-     ret = [self readAPacketAndUpdateState];
-
-    if ( ret >= 0 )
+    
+    if (ret < 0)
     {
-        completionHandler(stepCount, nil);
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(stepCount, error);
+        return;
     }
-    else
+    
+    ret = [self readAPacketAndUpdateState];
+    
+    
+    if (ret < 0)
     {
-        NSError *error = [NSError errorWithDomain:@"com.example" code:ret userInfo:nil];
-        completionHandler(stepCount, error );
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(stepCount, error);
+        return;
     }
+    
+    ret = [self seekToDTS:timeToSeekTo];
+    
+    if (ret < 0)
+    {
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(stepCount, error);
+        return;
+    }
+    
+    completionHandler(stepCount, nil);
 }
 
 // The issue here is that we should only count
@@ -226,42 +260,57 @@ typedef struct  {
     CMTime timeToSeekTo = CMTimeAdd(self.presentationTimeStamp, timeOffset);
 
     int ret = [self seekToPTS:timeToSeekTo];
+    
+    if (ret < 0)
+    {
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(stepCount, error);
+        return;
+    }
+    
     ret = [self readAPacketAndUpdateState];
     
-    if ( ret >= 0 )
+    if (ret < 0)
     {
-        completionHandler(stepCount, nil);
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(stepCount, error);
+        return;
     }
-    else
+    
+    ret = [self seekToDTS:timeToSeekTo];
+    
+    if (ret < 0)
     {
-        NSError *error = [NSError errorWithDomain:@"com.example" code:ret userInfo:nil];
-        completionHandler(stepCount, error );
+        NSError* error = [self libAVFormatErrorFrom:ret];
+        completionHandler(stepCount, error);
+        return;
     }
+    
+    completionHandler(stepCount, nil);
 }
 
 // MARK: - Sample Location - I could not get these to work
 
-//-(BOOL)samplesWithEarlierDTSsMayHaveLaterPTSsThanCursor:(id<MESampleCursor>)cursor
-//
-//{
-//    return YES;
-//}
-//
-//-(BOOL)samplesWithLaterDTSsMayHaveEarlierPTSsThanCursor:(id<MESampleCursor>)cursor
-//{
-//    return YES;
-//}
+-(BOOL)samplesWithEarlierDTSsMayHaveLaterPTSsThanCursor:(id<MESampleCursor>)cursor
+{
+    return NO;
+}
+
+-(BOOL)samplesWithLaterDTSsMayHaveEarlierPTSsThanCursor:(id<MESampleCursor>)cursor
+{
+    return NO;
+}
 
 //- (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 //{
-//    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers )
-//    {
-//        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
-//        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
-//        return NULL;
-//    }
+////    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers )
+////    {
+////        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
+////        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
+////        return NULL;
+////    }
 //    
-//    NSLog( @"LibAVSampleCursor sampleLocationReturningError offset: %li, length: %li", self.sampleOffset, self.sampleSize );
+////    NSLog( @"LibAVSampleCursor sampleLocationReturningError offset: %li, length: %li", self.sampleOffset, self.sampleSize );
 //
 //    AVSampleCursorStorageRange range;
 //    range.offset = self.sampleOffset;
@@ -271,21 +320,21 @@ typedef struct  {
 //    
 //    return location;
 //}
-//
+
 //- (MESampleCursorChunk * _Nullable) chunkDetailsReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
 //{
-//    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
-//    {
-//        NSLog(@"chunkDetailsReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
-//        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
-//        return NULL;
-//    }
+////    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
+////    {
+////        NSLog(@"chunkDetailsReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
+////        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
+////        return NULL;
+////    }
 //
 //    NSLog(@"chunkDetailsReturningError");
 //
 //    AVSampleCursorStorageRange range;
 //    range.offset = self.sampleOffset;
-//    range.length = self.sampleSize;
+//    range.length = 0;// self.sampleSize;
 //
 //    AVSampleCursorChunkInfo info;
 //    info.chunkSampleCount = 1; // NO IDEA LOLZ
@@ -303,25 +352,30 @@ typedef struct  {
 
 // MARK: - Sample Buffer Delivery - Works
 
-//// Lets try a new strategy - simply implement this method and provide fully decoded frames to Core Media?
+////// Lets try a new strategy - simply implement this method and provide fully decoded frames to Core Media?
 - (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler
 {
     NSLog(@"LibAVSampleCursor: %@ loadSampleBufferContainingSamplesToEndCursor endCursor%@", self, endSampleCursor);
    
-//    [self seekToPTS:self.presentationTimeStamp];
-  
-    
     AVPacket* packet = [self copyNextAVPacket];
-    [self updateStateForPacket:packet];
-    CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVPacketWithoutDecoding:packet];
-
-    NSLog(@"LibAVSampleCursor: %@ loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", self, sampleBuffer);
-    
-    completionHandler(sampleBuffer, nil);
-
-//    av_packet_unref(packet);
-    
-    CFRelease(sampleBuffer);
+    if (packet)
+    {
+        [self updateStateForPacket:packet];
+        CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVPacketWithoutDecoding:packet];
+        
+        NSLog(@"LibAVSampleCursor: %@ loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", self, sampleBuffer);
+        
+        completionHandler(sampleBuffer, nil);
+        
+        av_packet_unref(packet);
+        
+        CFRelease(sampleBuffer);
+        return;
+    }
+    else
+    {
+        completionHandler(nil, nil);
+    }
 }
 
 // MARK: - NO PROTOCOL REQUIREMENTS BELOW -
@@ -334,7 +388,6 @@ typedef struct  {
 
     // Create a CMBlockBuffer from the packet data
     CMBlockBufferRef blockBuffer = NULL;
-    
     OSStatus status = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
                                                          (void *)packet->data,
                                                          packet->size,
@@ -369,20 +422,7 @@ typedef struct  {
                                        NULL,
                                        &sampleBuffer);
     
-//    status = CMSampleBufferCreate(kCFAllocatorDefault,
-//                                  blockBuffer,
-//                                  TRUE,
-//                                  NULL,
-//                                  NULL,
-//                                  self.currentSampleFormatDescription,
-//                                  1,
-//                                  1,
-//                                  &timingInfo,
-//                                  0,
-//                                  NULL,
-//                                  &sampleBuffer
-//                                  );
-      
+
 //      CFRelease(blockBuffer);
       
       if (status != noErr) {
@@ -393,18 +433,18 @@ typedef struct  {
       return sampleBuffer;
 }
 
-// MARK: - Step Helper Functions
+// MARK: - Seeking Helper Functions
 
 - (void) seekToBeginningOfFile
 {
     // TODO: Not technically correct
-    [self seekToDTS:kCMTimeZero];
+    [self seekToPTS:kCMTimeZero];
 }
 
 - (void) seekToEndOfFile
 {
     // TODO: Not technically correct
-    [self seekToDTS:self.trackReader.formatReader.duration];
+    [self seekToPTS:self.trackReader.formatReader.duration];
 }
 
 - (int) seekToPTS:(CMTime)time
@@ -443,13 +483,22 @@ typedef struct  {
 
     return avformat_seek_file(self.trackReader.formatReader->format_ctx,
                               self.trackReader.streamIndex - 1,
-                              timeInStreamUnits.value,
+                              0,
                               timeInStreamUnits.value,
                               timeInStreamUnits.value,
                               flags);
 }
 
-// MARK: - Read
+// MARK: - Frame Stepping Functions
+//
+//- (int) readNPacketsForward:(int)packets flags(int)flags
+//{
+//    AVPacket packet = NULL;
+//    av_read_frame(self.trackReader.formatReader->format_ctx, &packet);
+//    
+//    return
+//}
+
 
 // Reciever must call av_packet_unref on this packer
 - (int) readAPacketAndUpdateState
@@ -464,7 +513,7 @@ typedef struct  {
         {
             [self updateStateForPacket:&packet];
             
-//            av_packet_unref(&packet);
+            av_packet_unref(&packet);
 
             return 1;
         }
@@ -484,11 +533,11 @@ typedef struct  {
        return NULL;
    }
 
-   while (av_read_frame(self.trackReader.formatReader->format_ctx, packet) >= 0)
+   while (av_read_frame(self.trackReader.formatReader->format_ctx,  packet) >= 0)
    {
        if (packet->stream_index == self.trackReader.streamIndex - 1)
        {
-           [self updateStateForPacket:packet];
+//           [self updateStateForPacket:packet];
 
            return packet;
        }
@@ -503,13 +552,6 @@ typedef struct  {
 }
 
 // MARK: - State
-
-// Use this before reading
-//- (void) updateOffsetUsingCurrentFilePosition
-//{
-//    avio_tell(formatContext->pb) - packet.size
-////    self.sampleOffset = self.trackReader.formatReader.currentReadOffset; ///packet->pos;
-//}
 
 // Use this after we reading vents a packet
 - (void) updateStateForPacket:(const AVPacket*)packet
@@ -532,18 +574,17 @@ typedef struct  {
         }
     }
     
-    
     self.syncInfo = [self extractSyncInfoFrom:packet];
     self.currentSampleDependencyInfo = [self extractDependencyInfoFromPacket:packet codecParameters:self.trackReader->stream->codecpar];
     
     self.sampleSize = packet->size;
     self.sampleOffset = packet->pos;
-    
-    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Presentation Timestamp %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
-    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Decode Timestamp %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));
-    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Duration %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.currentSampleDuration));
-    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket sampleOffset %lu", self, (unsigned long)self.sampleOffset);
-    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket sampleSize %lu", self, (unsigned long)self.sampleSize);
+
+//    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Presentation Timestamp %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.presentationTimeStamp));
+//    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Decode Timestamp %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.decodeTimeStamp));
+//    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket Duration %@", self, CMTimeCopyDescription(kCFAllocatorDefault, self.currentSampleDuration));
+//    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket sampleOffset %lu", self, (unsigned long)self.sampleOffset);
+//    NSLog(@"LibAVSampleCursor: %@ updateStateForPacket sampleSize %lu", self, (unsigned long)self.sampleSize);
 }
 
 // MARK: - Sync Utility
@@ -631,6 +672,15 @@ typedef struct  {
 //    NSLog(@"LibAVSampleCursor Converted %@", CMTimeCopyDescription(kCFAllocatorDefault, time));
     
     return time;
+}
+
+// MARK: Error
+
+- (NSError*) libAVFormatErrorFrom:(int)returnCode
+{
+    NSError *error = [NSError errorWithDomain:@"libavformat.ffmpeg" code:returnCode userInfo:nil];
+
+    return error;
 }
 
 @end
