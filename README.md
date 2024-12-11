@@ -1,8 +1,12 @@
 # FFMPEGMediaExtension
 
-This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theory would allow for native AVFoundation container parsing and decode.
+This is an attempt to build a macOS 15.0 MediaExtension for libAV* which in theory would allow for native AVFoundation container parsing and decode of FFMPEG enabled Container formats (.mkv, .wmv, .avi etc) and Codecs (ie VP9, VP8, DIVX, XVID etc).
 
-Since MediaExtensions are shipped in a host app, this has also provides a Host app.
+You can think of Media Extensions as a modern macOS replacement for old macOS 7, 8, 9 and early macOS X Quicktime Extensions.
+
+You can think of this project as an attempt to make a one size fits all Media Extension like the old Perian software.
+
+Since Media Extensions are shipped in a host app, this has also provides a Host app.
 
 We have basic frame decoding working! 
 <img width="1012" alt="image" src="https://github.com/user-attachments/assets/90c76ba3-4fa9-40df-869a-a9c265afb21d">
