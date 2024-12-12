@@ -93,7 +93,7 @@ typedef struct  {
     self = [super init];
     if (self)
     {
-        NSLog(@"LibAVSampleCursor %@ init with pts/dts", self);
+        NSLog(@"LibAVSampleCursor %@ init with pts %@ /dts %@", self, CMTimeCopyDescription(kCFAllocatorDefault, pts), CMTimeCopyDescription(kCFAllocatorDefault, dts));
 
         self.trackReader = trackReader;
         
@@ -224,27 +224,32 @@ typedef struct  {
 {
     NSLog(@"LibAVSampleCursor %@ stepInDecodeOrderByCount  %lli", self, stepCount);
     
-    CMTime timeOffset = CMTimeMultiply(self.currentSampleDuration, stepCount);
-    CMTime timeToSeekTo = CMTimeAdd(self.decodeTimeStamp, timeOffset);
+//    CMTime timeOffset = CMTimeMultiply(self.currentSampleDuration, stepCount);
+//    CMTime timeToSeekTo = CMTimeAdd(self.decodeTimeStamp, timeOffset);
+//    
+//    int ret = [self seekToDTS:timeToSeekTo];
+//    
+//    if (ret < 0)
+//    {
+//        NSError* error = [self libAVFormatErrorFrom:ret];
+//        completionHandler(stepCount, error);
+//        return;
+//    }
     
-    int ret = [self seekToDTS:timeToSeekTo];
-    
-    if (ret < 0)
+    for (int i = 0; i < stepCount; i++)
     {
-        NSError* error = [self libAVFormatErrorFrom:ret];
-        completionHandler(stepCount, error);
-        return;
+        
+        int ret = [self readAPacketAndUpdateState];
+        
+        if (ret < 0)
+        {
+            NSError* error = [self libAVFormatErrorFrom:ret];
+            completionHandler(stepCount, error);
+            return;
+        }
+        
     }
     
-    ret = [self readAPacketAndUpdateState];
-    
-    
-    if (ret < 0)
-    {
-        NSError* error = [self libAVFormatErrorFrom:ret];
-        completionHandler(stepCount, error);
-        return;
-    }
     
 //    ret = [self seekToDTS:timeToSeekTo];
 //    
@@ -489,6 +494,9 @@ typedef struct  {
 {
     CMTime timeInStreamUnits = CMTimeConvertScale(time, self.trackReader->stream->time_base.den, kCMTimeRoundingMethod_Default);
 
+    NSLog(@"LibAVSampleCursor: %@ seekToTime converted to %@", self, CMTimeCopyDescription(kCFAllocatorDefault, timeInStreamUnits));
+
+    
     return avformat_seek_file(self.trackReader.formatReader->format_ctx,
                               self.trackReader.streamIndex - 1,
                               timeInStreamUnits.value,

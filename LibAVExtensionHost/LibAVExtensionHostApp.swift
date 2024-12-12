@@ -20,10 +20,10 @@ struct LibAVExtensionHostApp: App
         VTRegisterProfessionalVideoWorkflowVideoDecoders()
 
         // Has GOP
-        let url = URL(filePath:"/Users/vade/test.mkv")
+//        let url = URL(filePath:"/Users/vade/test.mkv")
         
         // All Key Frames
-//        let url = URL(filePath:"/Users/vade/output.mkv")
+        let url = URL(filePath:"/Users/vade/output.mkv")
                 
         self.asset = AVURLAsset(url: url,  options: [AVURLAssetPreferPreciseDurationAndTimingKey : true])
         
