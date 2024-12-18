@@ -82,7 +82,7 @@ typedef struct  {
         // Populate some of our properties off of the first packet and reset
         [self seekToPTS:pts];
         [self readAPacketAndUpdateState];
-        [self seekToPTS:pts];
+//        [self seekToPTS:pts];
     }
     
     return self;
@@ -319,54 +319,54 @@ typedef struct  {
 
 // MARK: - Sample Location - I could not get these to work
 
-- (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
-{
-//    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers )
-//    {
-//        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
-//        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
-//        return NULL;
-//    }
-    
-//    NSLog( @"LibAVSampleCursor sampleLocationReturningError offset: %li, length: %li", self.sampleOffset, self.sampleSize );
-
-    AVSampleCursorStorageRange range;
-    range.offset = self.sampleOffset;
-    range.length = self.sampleSize;
-    
-    MESampleLocation* location = [[MESampleLocation alloc] initWithByteSource:self.trackReader.formatReader.byteSource sampleLocation:range];
-    
-    return location;
-}
-
-- (MESampleCursorChunk * _Nullable) chunkDetailsReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
-{
-//    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
-//    {
-//        NSLog(@"chunkDetailsReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
-//        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
-//        return NULL;
-//    }
-
-    NSLog(@"chunkDetailsReturningError");
-
-    AVSampleCursorStorageRange range;
-    range.offset = self.sampleOffset;
-    range.length = 0;// self.sampleSize;
-
-    AVSampleCursorChunkInfo info;
-    info.chunkSampleCount = 1; // NO IDEA LOLZ
-    info.chunkHasUniformSampleSizes = false;
-    info.chunkHasUniformSampleDurations = true;
-    info.chunkHasUniformFormatDescriptions = true;
-    
-    MESampleCursorChunk* chunk = [[MESampleCursorChunk alloc] initWithByteSource:self.trackReader.formatReader.byteSource
-                                                               chunkStorageRange:range
-                                                                       chunkInfo:info
-                                                          sampleIndexWithinChunk:0];
-    
-    return chunk;
-}
+//- (MESampleLocation * _Nullable) sampleLocationReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
+//{
+////    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers )
+////    {
+////        NSLog(@"sampleLocationReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
+////        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
+////        return NULL;
+////    }
+//    
+////    NSLog( @"LibAVSampleCursor sampleLocationReturningError offset: %li, length: %li", self.sampleOffset, self.sampleSize );
+//
+//    AVSampleCursorStorageRange range;
+//    range.offset = self.sampleOffset;
+//    range.length = self.sampleSize;
+//    
+//    MESampleLocation* location = [[MESampleLocation alloc] initWithByteSource:self.trackReader.formatReader.byteSource sampleLocation:range];
+//    
+//    return location;
+//}
+//
+//- (MESampleCursorChunk * _Nullable) chunkDetailsReturningError:(NSError *__autoreleasing _Nullable * _Nullable) error
+//{
+////    if ( self.currentSampleDependencyInfo.sampleDependsOnOthers)
+////    {
+////        NSLog(@"chunkDetailsReturningError - have sampleDependsOnOthers - returning MEErrorLocationNotAvailable ");
+////        *error = [NSError errorWithDomain:@"sampleLocationReturningError" code:MEErrorLocationNotAvailable userInfo:nil];
+////        return NULL;
+////    }
+//
+//    NSLog(@"chunkDetailsReturningError");
+//
+//    AVSampleCursorStorageRange range;
+//    range.offset = self.sampleOffset;
+//    range.length = self.sampleSize;
+//
+//    AVSampleCursorChunkInfo info;
+//    info.chunkSampleCount = 1; // NO IDEA LOLZ
+//    info.chunkHasUniformSampleSizes = false;
+//    info.chunkHasUniformSampleDurations = true;
+//    info.chunkHasUniformFormatDescriptions = true;
+//    
+//    MESampleCursorChunk* chunk = [[MESampleCursorChunk alloc] initWithByteSource:self.trackReader.formatReader.byteSource
+//                                                               chunkStorageRange:range
+//                                                                       chunkInfo:info
+//                                                          sampleIndexWithinChunk:0];
+//    
+//    return chunk;
+//}
 
 // MARK: - Sample Buffer Delivery - Works
 
@@ -374,22 +374,23 @@ typedef struct  {
 - (void)loadSampleBufferContainingSamplesToEndCursor:(nullable id<MESampleCursor>)endSampleCursor completionHandler:(void (^)(CMSampleBufferRef _Nullable newSampleBuffer, NSError * _Nullable error))completionHandler
 {
     NSLog(@"LibAVSampleCursor: %@ loadSampleBufferContainingSamplesToEndCursor endCursor%@", self, endSampleCursor);
-   
+       
     if (self->packet)
     {
         CMSampleBufferRef sampleBuffer = [self createSampleBufferFromAVPacketWithoutDecoding:self->packet];
         
-        NSLog(@"LibAVSampleCursor: %@ loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", self, sampleBuffer);
-        
-        completionHandler(sampleBuffer, nil);
-                
-        CFRelease(sampleBuffer);
-        return;
+        if ( sampleBuffer != NULL )
+        {
+            NSLog(@"LibAVSampleCursor: %@ loadSampleBufferContainingSamplesToEndCursor Got Sample Buffer %@", self, sampleBuffer);
+            
+            completionHandler(sampleBuffer, nil);
+                    
+            CFRelease(sampleBuffer);
+            return;
+        }
     }
-    else
-    {
-        completionHandler(nil, nil);
-    }
+   
+    completionHandler(nil, nil);
 }
 
 // MARK: - NO PROTOCOL REQUIREMENTS BELOW -
@@ -500,9 +501,9 @@ typedef struct  {
     
     return avformat_seek_file(self.trackReader.formatReader->format_ctx,
                               self.trackReader.streamIndex - 1,
+                              0,
                               timeInStreamUnits.value,
-                              timeInStreamUnits.value,
-                              timeInStreamUnits.value,
+                              INT_MAX,
                               flags);
 }
 
@@ -517,11 +518,9 @@ typedef struct  {
         if ( packet->stream_index == self.trackReader.streamIndex - 1 )
         {
             [self updateStateForPacket:self->packet];
-            
 
             return 1;
         }
-
     }
 
     return -1;

@@ -153,10 +153,11 @@ int64_t seek(void *opaque, int64_t offset, int whence)
     avformat_close_input(&format_ctx);
     format_ctx = NULL;
 
-    avio_context_free(&avio_ctx);
+    avio_ctx_buffer(&avio_ctx);
     avio_ctx = NULL;
-
-    av_free(avio_ctx_buffer);
+    
+    // we get a crash on this, perhaps avio_ctx_buffer frees the underlying buffer / takes ownership of it>
+//    av_free(avio_ctx_buffer);
     avio_ctx_buffer = NULL;
 }
 
